@@ -1,5 +1,6 @@
 <script lang="ts">
   import { COLORS } from "../lib/colors";
+  import { t } from "../lib/i18n.svelte";
 
   interface Props {
     currentPlayer: "Black" | "White";
@@ -23,25 +24,25 @@
 </script>
 
 <div class="panel" style="--cp: {COLORS.stonePrimaryHex}; --cs: {COLORS.stoneSecondaryHex};">
-  <h2 class="title">芯棋</h2>
+  <h2 class="title">{t("app.title")}</h2>
 
   <div class="info-row">
-    <span class="label">回合</span>
+    <span class="label">{t("sidebar.turn")}</span>
     <span class="value">{moveCount}</span>
   </div>
 
   <div class="info-row">
-    <span class="label">当前</span>
+    <span class="label">{t("sidebar.current")}</span>
     <span class="player-dot" class:black={currentPlayer === "Black"} class:white={currentPlayer === "White"}></span>
-    <span class="value">{currentPlayer === "Black" ? "黑方" : "白方"}</span>
+    <span class="value">{currentPlayer === "Black" ? t("player.black") : t("player.white")}</span>
   </div>
 
   <div class="info-row">
-    <span class="label">内芯</span>
+    <span class="label">{t("sidebar.inner_core")}</span>
     <span class="core-group">
-      <span class="core-dot dark"><span class="dot"></span><span class="label-text">黑</span><span class="num">{innerCoreBlack}</span></span>
+      <span class="core-dot dark"><span class="dot"></span><span class="label-text">{t("player.black_short")}</span><span class="num">{innerCoreBlack}</span></span>
       <span class="core-sep">/</span>
-      <span class="core-dot light"><span class="dot"></span><span class="label-text">白</span><span class="num">{innerCoreWhite}</span></span>
+      <span class="core-dot light"><span class="dot"></span><span class="label-text">{t("player.white_short")}</span><span class="num">{innerCoreWhite}</span></span>
     </span>
   </div>
 
@@ -52,7 +53,9 @@
   {#if terminal}
     <div class="info-row terminal">
       <span class="value winner">
-        {#if winner === "Black"}<span class="win-dot blue"></span> 黑胜{:else if winner === "White"}<span class="win-dot orange"></span> 白胜{:else}平局{/if}
+        {#if winner === "Black"}<span class="win-dot blue"></span> {t("terminal.black_win")}
+        {:else if winner === "White"}<span class="win-dot orange"></span> {t("terminal.white_win")}
+        {:else}{t("terminal.draw")}{/if}
       </span>
     </div>
   {/if}

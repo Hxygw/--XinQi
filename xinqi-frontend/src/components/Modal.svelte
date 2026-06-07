@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t } from "../lib/i18n.svelte";
+
   interface Props {
     show: boolean;
     /** 'records' | 'confirm' | 'none' */
@@ -27,13 +29,13 @@
       onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
       {#if mode === 'records'}
         <div class="modal-header">
-          <span>棋谱列表</span>
+          <span>{t("modal.record_list")}</span>
           <button class="modal-close" onclick={onClose}>✕</button>
         </div>
         <div class="modal-body">
-          <button class="modal-refresh" onclick={onRefresh}>↻ 刷新</button>
+          <button class="modal-refresh" onclick={onRefresh}>{t("modal.refresh")}</button>
           {#if recordList.length === 0}
-            <div class="modal-empty">暂无棋谱</div>
+            <div class="modal-empty">{t("modal.empty")}</div>
           {:else}
             {#each recordList as file}
               <button class="modal-record" onclick={() => onSelect(file)}>
@@ -44,29 +46,29 @@
         </div>
       {:else if mode === 'confirm'}
         <div class="modal-header">
-          <span>加载棋谱</span>
+          <span>{t("modal.load_record")}</span>
           <button class="modal-close" onclick={onClose}>✕</button>
         </div>
         <div class="modal-body">
-          <p>确认加载棋谱 <strong>{confirmTarget.slice(5, -5)}</strong>？</p>
-          <p class="modal-warn">当前对局将被覆盖。</p>
+          <p>{t("modal.load_confirm")} <strong>{confirmTarget.slice(5, -5)}</strong>？</p>
+          <p class="modal-warn">{t("modal.warn")}</p>
           <div class="modal-actions">
-            <button class="btn-new" onclick={onCancel}>取消</button>
-            <button class="btn-new" onclick={onConfirm} disabled={browseBusy} style="background:#1a5276;">
-              {browseBusy ? '加载中...' : '确认'}
+            <button class="btn-new" onclick={onCancel}>{t("modal.cancel")}</button>
+            <button class="btn-new" onclick={onConfirm} disabled={browseBusy} style="background:#7c6df0; color:#fff;">
+              {browseBusy ? t("modal.loading") : t("modal.confirm")}
             </button>
           </div>
         </div>
       {:else if mode === 'new_game'}
         <div class="modal-header">
-          <span>新游戏</span>
+          <span>{t("modal.new_game_title")}</span>
           <button class="modal-close" onclick={onClose}>✕</button>
         </div>
         <div class="modal-body">
-          <p>确定要结束当前对局吗？</p>
+          <p>{t("modal.new_game_confirm")}</p>
           <div class="modal-actions">
-            <button class="btn-new" onclick={onCancel}>取消</button>
-            <button class="btn-new" onclick={onConfirm} style="background:#7c6df0; color:#fff;">确认</button>
+            <button class="btn-new" onclick={onCancel}>{t("modal.cancel")}</button>
+            <button class="btn-new" onclick={onConfirm} style="background:#7c6df0; color:#fff;">{t("modal.confirm")}</button>
           </div>
         </div>
       {/if}
