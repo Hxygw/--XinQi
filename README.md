@@ -51,7 +51,7 @@
 
 **方式一：下载预编译包（推荐）**
 
-从 [Releases](https://github.com/YOUR_USERNAME/芯棋-XinQi/releases) 下载最新版 `XinQiServer-v0.1.0.zip`，解压后双击 `XinQiServer.exe`，浏览器打开 `http://localhost:8090`。
+从 [Releases](https://github.com/Hxygw/--XinQi/releases) 下载最新版 `XinQiServer-v0.1.0.zip`，解压后双击 `XinQiServer.exe`，浏览器打开 `http://localhost:8090`。
 
 **方式二：从源码构建**
 
@@ -170,7 +170,7 @@ XinQi (芯棋, "Core Chess") is a two-player zero-sum board game played on an **
 
 **Option 1: Download pre-built binary**
 
-Download `XinQiServer-v0.1.0.zip` from [Releases](https://github.com/YOUR_USERNAME/芯棋-XinQi/releases), unzip, double-click `XinQiServer.exe`, and open `http://localhost:8090` in your browser.
+Download `XinQiServer-v0.1.0.zip` from [Releases](https://github.com/Hxygw/--XinQi/releases), unzip, double-click `XinQiServer.exe`, and open `http://localhost:8090` in your browser.
 
 **Option 2: Build from source**
 
