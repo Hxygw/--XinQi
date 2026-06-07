@@ -54,7 +54,7 @@
           <p class="modal-warn">{t("modal.warn")}</p>
           <div class="modal-actions">
             <button class="btn-new" onclick={onCancel}>{t("modal.cancel")}</button>
-            <button class="btn-new" onclick={onConfirm} disabled={browseBusy} style="background:#7c6df0; color:#fff;">
+            <button class="btn-new" onclick={onConfirm} disabled={browseBusy} style="background:var(--accent); color:var(--modal-bg);">
               {browseBusy ? t("modal.loading") : t("modal.confirm")}
             </button>
           </div>
@@ -68,7 +68,7 @@
           <p>{t("modal.new_game_confirm")}</p>
           <div class="modal-actions">
             <button class="btn-new" onclick={onCancel}>{t("modal.cancel")}</button>
-            <button class="btn-new" onclick={onConfirm} style="background:#7c6df0; color:#fff;">{t("modal.confirm")}</button>
+            <button class="btn-new" onclick={onConfirm} style="background:var(--accent); color:var(--modal-bg);">{t("modal.confirm")}</button>
           </div>
         </div>
       {/if}
@@ -79,54 +79,55 @@
 <style>
   .modal-overlay {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.3);
+    background: var(--overlay-bg);
     display: flex; align-items: center; justify-content: center;
     z-index: 500;
   }
   .modal-panel {
-    background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.06);
+    background: var(--modal-bg);
+    border: 1px solid var(--modal-border);
     border-radius: 12px;
     min-width: 340px; max-width: 500px;
     max-height: 70vh;
     display: flex; flex-direction: column;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.08);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
   }
   .modal-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 1rem 1.2rem;
-    border-bottom: 1px solid rgba(0,0,0,0.06);
-    font-size: 0.95rem; color: #1e1b4b; font-weight: 600;
+    border-bottom: 1px solid var(--divider);
+    font-size: 0.95rem; color: var(--modal-header-text); font-weight: 600;
   }
   .modal-close {
     background: none; border: none;
-    color: #9ca3af; font-size: 1.2rem; cursor: pointer;
+    color: var(--modal-close); font-size: 1.2rem; cursor: pointer;
   }
-  .modal-close:hover { color: #1e1b4b; }
+  .modal-close:hover { color: var(--modal-close-hover); }
   .modal-body {
     padding: 0.8rem 1.2rem; overflow-y: auto;
     display: flex; flex-direction: column; gap: 0.4rem;
   }
+  .modal-body p { color: var(--modal-body-text); }
   .modal-refresh, .modal-record {
-    background: #f5f3ff; color: #6b7280;
-    border: 1px solid rgba(0,0,0,0.04);
+    background: var(--modal-btn-bg); color: var(--modal-btn-color);
+    border: 1px solid var(--modal-btn-border);
     border-radius: 6px; padding: 0.5rem 0.8rem;
     font-size: 0.85rem; cursor: pointer;
     text-align: left; transition: background 0.15s;
   }
-  .modal-refresh:hover, .modal-record:hover { background: #e8e5ff; color: #1e1b4b; }
-  .modal-empty { color: #9ca3af; text-align: center; padding: 1rem; }
-  .modal-warn { color: #e74c3c; font-size: 0.82rem; }
+  .modal-refresh:hover, .modal-record:hover { background: var(--modal-btn-hover-bg); color: var(--modal-btn-hover-color); }
+  .modal-empty { color: var(--modal-empty); text-align: center; padding: 1rem; }
+  .modal-warn { color: var(--modal-warn); font-size: 0.82rem; }
   .modal-actions {
     display: flex; gap: 0.6rem;
     justify-content: flex-end; margin-top: 0.5rem;
   }
   .btn-new {
-    background: #f5f3ff; color: #6b7280;
-    border: 1px solid rgba(0,0,0,0.04);
+    background: var(--btn-new-bg); color: var(--btn-new-color);
+    border: 1px solid var(--btn-new-border);
     border-radius: 8px; padding: 0.55rem 1.5rem;
     font-size: 0.85rem; cursor: pointer; transition: all 0.15s;
   }
-  .btn-new:hover { background: #e8e5ff; color: #1e1b4b; }
+  .btn-new:hover { background: var(--btn-new-hover-bg); color: var(--btn-new-hover-color); }
   .btn-new:disabled { opacity: 0.25; cursor: default; background: none; }
 </style>

@@ -13,7 +13,6 @@
   import { onMount, onDestroy } from "svelte";
   import * as THREE from "three";
   import { to3D, to1D } from "../lib/boardUtils";
-  import { COLORS } from "../lib/colors";
 
   interface Props {
     board: Uint8Array;
@@ -40,6 +39,18 @@
     autoRotate?: boolean;
     /** 是否启用交互检测（默认 true） */
     raycastEnabled?: boolean;
+    /** 主题色 */
+    sceneBg?: number;
+    gridColor?: number;
+    dotColor?: number;
+    innerCoreGlowColor?: number;
+    /** 棋子颜色 */
+    stonePrimary?: number;
+    stoneSecondary?: number;
+    /** 内芯空位色（伤疤） */
+    vacancyColor?: number;
+    /** 网格透明度 */
+    gridOpacity?: number;
     onhover?: (pt: { x: number; y: number; z: number }) => void;
     onleave?: () => void;
     oncellclick?: (pt: { x: number; y: number; z: number }) => void;
@@ -54,6 +65,8 @@
     moveMode, moveSourceIdx, moveBlockIndices, validTargets,
     hoverResult = null, validTargetHover = null,
     browseTick = 0, autoRotate = false, raycastEnabled = true,
+    sceneBg = 0xf5f3ff, gridColor = 0x7c6df0, dotColor = 0x6c5ce7, innerCoreGlowColor = 0x7c6df0,
+    stonePrimary = 0x1E293B, stoneSecondary = 0xD97706, vacancyColor = 0xF43F5E, gridOpacity = 0.5,
     onhover, onleave, oncellclick, oncellrightclick,
     onSectionChange,
   }: Props = $props();
@@ -81,8 +94,8 @@
   let gridLineGroup = new THREE.Group();
   let dotGroup = new THREE.Group();
   let stoneGroup = new THREE.Group();
-  let innerCoreGlowGroup = new THREE.Group();
   let highlightGroup = new THREE.Group();
+  let innerCoreGlowGroup = new THREE.Group();
   let vacancyGroup = new THREE.Group();
   let moveBlockGroup = new THREE.Group();
   let validTargetGroup = new THREE.Group();
@@ -180,8 +193,27 @@
     renderFrame();
   });
 
-  const LINE_COLOR = 0x7c6df0;
-  const DOT_COLOR = 0x6c5ce7;
+  // 主题色变化时更新场景背景 + 网格 + 光晕 + 棋子
+  $effect(() => {
+    const _bg = sceneBg;
+    const _gc = gridColor;
+    const _dc = dotColor;
+    const _ig = innerCoreGlowColor;
+    const _sp = stonePrimary;
+    const _ss = stoneSecondary;
+    const _vc = vacancyColor;
+    const _go = gridOpacity;
+    if (!initialized) return;
+    scene.background = new THREE.Color(sceneBg);
+    buildGrid();
+    updateStones();
+    updateInnerCoreGlow();
+    updateVacancies();
+    updateGridOpacity();
+    updateSectionPlane();
+    renderFrame();
+  });
+
   const STONE_RADIUS = 0.29;
   const STONE_SEGMENTS = 20;
 
@@ -193,7 +225,7 @@
     const h = rect.height || 600;
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf5f3ff);
+    scene.background = new THREE.Color(sceneBg);
 
     camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
     const center = (N - 1) / 2;
@@ -226,11 +258,11 @@
     boardContent.add(gridLineGroup);
     boardContent.add(dotGroup);
     boardContent.add(stoneGroup);
+    boardContent.add(highlightGroup);
     boardContent.add(innerCoreGlowGroup);
     boardContent.add(vacancyGroup);
     boardContent.add(moveBlockGroup);
     boardContent.add(validTargetGroup);
-    boardContent.add(highlightGroup);
     boardContent.add(sectionPlaneGroup);
 
     buildGrid();
@@ -320,20 +352,20 @@
     gridLineMeta = [];
 
     const lineMat = new THREE.LineBasicMaterial({
-      color: LINE_COLOR,
+      color: gridColor,
       transparent: true,
-      opacity: 0.35,
+      opacity: gridOpacity,
     });
     const dotMat = new THREE.MeshBasicMaterial({
-      color: DOT_COLOR,
+      color: dotColor,
       transparent: true,
-      opacity: 0.5,
+      opacity: gridOpacity,
     });
     const dotGeo = new THREE.SphereGeometry(0.04, 6, 6);
     const borderMat = new THREE.LineBasicMaterial({
-      color: LINE_COLOR,
+      color: gridColor,
       transparent: true,
-      opacity: 0.6,
+      opacity: gridOpacity * 1.4,
     });
 
     const maxIdx = N - 1;
@@ -443,27 +475,29 @@
       const inSlice = isInSlice(pt.x, pt.y, pt.z);
       const isBlack = cell === 1;
       // 亮蓝（先手）vs 亮暖橘（后手）
-      const color = isBlack ? COLORS.stonePrimary : COLORS.stoneSecondary;
+      const color = isBlack ? stonePrimary : stoneSecondary;
 
-      // 底层极淡轮廓，区分相邻棋子
-      const outlineMat = new THREE.MeshBasicMaterial({
-        color: 0x1a1a2e,
-        transparent: true,
-        opacity: 0.15,
-        depthWrite: false,
-      });
-      const outline = new THREE.Mesh(
-        new THREE.SphereGeometry(STONE_RADIUS * 1.10, STONE_SEGMENTS, STONE_SEGMENTS),
-        outlineMat
-      );
-      outline.position.set(pt.x, pt.y, pt.z);
-      stoneGroup.add(outline);
+      // 底层极淡轮廓，区分相邻棋子（剖面模式下仅剖面内棋子显示）
+      if (!sectionAxis || inSlice) {
+        const outlineMat = new THREE.MeshBasicMaterial({
+          color: 0x1a1a2e,
+          transparent: true,
+          opacity: 0.15,
+          depthWrite: false,
+        });
+        const outline = new THREE.Mesh(
+          new THREE.SphereGeometry(STONE_RADIUS * 1.10, STONE_SEGMENTS, STONE_SEGMENTS),
+          outlineMat
+        );
+        outline.position.set(pt.x, pt.y, pt.z);
+        stoneGroup.add(outline);
+      }
 
       // 棋子本体
       const mat = new THREE.MeshBasicMaterial({
         color,
         transparent: sectionAxis !== null,
-        opacity: inSlice ? 1.0 : 0.30,
+        opacity: inSlice ? 1.0 : 0.12,
         depthWrite: inSlice,
       });
       const mesh = new THREE.Mesh(
@@ -475,27 +509,38 @@
     }
   }
 
-  // ── 内芯光晕 ───────────────────────────────────────
+  // ── 内芯标记：六方向粗线段到相邻格点 ────────────
 
   function updateInnerCoreGlow() {
     disposeGroup(innerCoreGlowGroup);
 
+    const LINE_WIDTH = 0.06;
+    const segMat = new THREE.MeshBasicMaterial({
+      color: innerCoreGlowColor,
+      transparent: true,
+      opacity: 0.7,
+    });
+
     for (const idx of innerCoreSet) {
       const pt = to3D(idx, N);
-      const inSlice = isInSlice(pt.x, pt.y, pt.z);
-      if (sectionAxis && !inSlice) continue;
-
-      // 淡蓝色半透明光晕
-      const glowGeo = new THREE.SphereGeometry(STONE_RADIUS * 1.15, 16, 16);
-      const glowMat = new THREE.MeshBasicMaterial({
-        color: 0x7c6df0,
-        transparent: true,
-        opacity: 0.20,
-        depthWrite: false,
-      });
-      const glow = new THREE.Mesh(glowGeo, glowMat);
-      glow.position.set(pt.x, pt.y, pt.z);
-      innerCoreGlowGroup.add(glow);
+      const { x, y, z } = pt;
+      // 六个方向，各延伸到相邻格点（边界处跳过）
+      const dirs: [number, number, number, string][] = [
+        [x + 1, y, z, 'x'], [x - 1, y, z, 'x'],
+        [x, y + 1, z, 'y'], [x, y - 1, z, 'y'],
+        [x, y, z + 1, 'z'], [x, y, z - 1, 'z'],
+      ];
+      for (const [ex, ey, ez, axis] of dirs) {
+        if (ex < 0 || ex >= N || ey < 0 || ey >= N || ez < 0 || ez >= N) continue;
+        const cx = (x + ex) / 2, cy = (y + ey) / 2, cz = (z + ez) / 2;
+        let geo: THREE.BoxGeometry;
+        if (axis === 'x') geo = new THREE.BoxGeometry(1, LINE_WIDTH, LINE_WIDTH);
+        else if (axis === 'y') geo = new THREE.BoxGeometry(LINE_WIDTH, 1, LINE_WIDTH);
+        else geo = new THREE.BoxGeometry(LINE_WIDTH, LINE_WIDTH, 1);
+        const mesh = new THREE.Mesh(geo, segMat);
+        mesh.position.set(cx, cy, cz);
+        innerCoreGlowGroup.add(mesh);
+      }
     }
   }
 
@@ -519,8 +564,8 @@
       vacancyGroup.add(box);
     };
 
-    for (const idx of vacancyBlack) renderVacancy(idx, 0x4466aa);
-    for (const idx of vacancyWhite) renderVacancy(idx, 0xaa6644);
+    for (const idx of vacancyBlack) renderVacancy(idx, vacancyColor);
+    for (const idx of vacancyWhite) renderVacancy(idx, vacancyColor);
   }
 
   // ── 挪子模式：连通块高亮 ───────────────────────────
@@ -602,9 +647,9 @@
 
     let glowColor: number;
     if (isInnerCore) {
-      glowColor = 0x7c6df0; // 内芯紫色
+      glowColor = innerCoreGlowColor;
     } else {
-      glowColor = legal ? 0x7c6df0 : 0xff3344;
+      glowColor = legal ? innerCoreGlowColor : 0xff3344;
     }
 
     // 呼吸光环 — 有棋子的位置大一圈，空格与棋子同大
@@ -719,7 +764,7 @@
 
     const planeGeo = new THREE.PlaneGeometry(N, N);
     const planeMat = new THREE.MeshBasicMaterial({
-      color: 0x7c6df0,
+      color: innerCoreGlowColor,
       transparent: true,
       opacity: 0.06,
       side: THREE.DoubleSide,
@@ -745,7 +790,7 @@
 
     const edgeGeo = new THREE.EdgesGeometry(planeGeo);
     const edgeMat = new THREE.LineBasicMaterial({
-      color: 0x7c6df0,
+      color: innerCoreGlowColor,
       transparent: true,
       opacity: 0.2,
     });

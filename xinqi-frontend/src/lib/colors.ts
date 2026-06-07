@@ -1,12 +1,12 @@
 /**
- * 芯棋配色常量
+ * 芯棋配色常量（默认亮色系）
  */
 
 export const COLORS = {
-  /** 先手棋子色（雾蓝） */
-  stonePrimary: 0x50b4e8,
-  stonePrimaryHex: "#50b4e8",
-  /** 后手棋子色（暖橘） */
-  stoneSecondary: 0xf09870,
-  stoneSecondaryHex: "#f09870",
+  /** 先手棋子色（亮色：深灰蓝 / 暗色：天蓝） */
+  stonePrimary: 0x1E293B,
+  stonePrimaryHex: "#1E293B",
+  /** 后手棋子色（亮色：琥珀 / 暗色：琥珀橙） */
+  stoneSecondary: 0xD97706,
+  stoneSecondaryHex: "#D97706",
 };
