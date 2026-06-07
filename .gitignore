@@ -1,0 +1,53 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sln.docstates
+Debug/
+Release/
+x64/
+*.VC.db
+*.VC.db-shm
+*.VC.db-wal
+*.VC.opendb
+
+# Build artifacts
+*.exe
+*.obj
+*.lib
+*.dll
+*.exp
+*.pdb
+*.ilk
+*.iobj
+*.ipdb
+*.tlog
+
+# Node.js
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+*.egg
+
+# Training data (generated at runtime)
+data/
+
+# Runtime records
+records/
+dev.bat
+
+# IDE / tooling
+.qwen/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
