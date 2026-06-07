@@ -14,6 +14,7 @@
   } from "./lib/boardUtils";
   import { t, setLang, getLang } from "./lib/i18n.svelte";
   import type { Lang } from "./lib/i18n.svelte";
+  import { playPlace, playShift, playCapture } from "./lib/sound";
 
   // ─ 游戏状态 ──
   let status = $state("loading");
@@ -226,6 +227,7 @@
     try {
       const result = await apiClient.play(pt.x, pt.y, pt.z);
       if (result.legal) {
+        if (result.captured_count > 0) playCapture(); else playPlace();
         await syncState();
         if (result.terminal) showNotification(t("notif.game_over"), 3000);
         else if (!terminal && isAITurn()) { await new Promise(r => setTimeout(r, 300)); doAIMove(); }
@@ -246,6 +248,7 @@
     try {
       const result = await apiClient.moveStone(src.x, src.y, src.z, pt.x, pt.y, pt.z);
       if (result.legal) {
+        if (result.captured_count > 0) playCapture(); else playShift();
         await syncState();
         exitMoveMode();
         if (result.terminal) showNotification(t("notif.game_over"), 3000);
@@ -266,6 +269,8 @@
       const player = currentPlayer === "Black" ? 1 : 2;
       if (board[idx] === player) { enterMoveMode(idx); return; }
     }
+    // 对手内芯空位 → 落入空腔（核心入侵）
+    if (vacancySet.has(idx) && vacancyOwners.get(idx) !== currentPlayer) { handlePlace(pt); return; }
     if (board[idx] === 0) { handlePlace(pt); return; }
     const cellPlayer = currentPlayer === "Black" ? 1 : 2;
     if (board[idx] === cellPlayer) showNotification(t("notif.not_inner_core"), 1500);
@@ -527,6 +532,8 @@
         ? await apiClient.play(r.x, r.y, r.z)
         : await apiClient.moveStone(r.x, r.y, r.z, r.target_x!, r.target_y!, r.target_z!);
       if (pr?.legal) {
+        if (pr.captured_count > 0) playCapture();
+        else if (r.type === 0) playPlace(); else playShift();
         await syncState();
         showNotification(`AI (${currentPlayer === "Black" ? t("player.black_short") : t("player.white_short")})`, 1500);
         if (!terminal && gameMode === "ai_both" && !aiStepMode) {

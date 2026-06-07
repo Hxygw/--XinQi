@@ -33,6 +33,7 @@ export interface GameState {
 export interface PlayResponse {
   legal: boolean;
   captured: Point[];
+  captured_count: number;
   next_player: "Black" | "White";
   terminal: boolean;
   winner?: "Black" | "White" | "Draw";
@@ -43,6 +44,7 @@ export interface PlayResponse {
 export interface MoveStoneResponse {
   legal: boolean;
   captured: Point[];
+  captured_count: number;
   new_vacancy: Point;
   next_player: "Black" | "White";
   terminal: boolean;

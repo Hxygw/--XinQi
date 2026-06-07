@@ -412,6 +412,7 @@ GameState* XinQi_Create(int8_t size) {
     gs->moveCount = 0;
     gs->hash = 0;
     gs->prevHash = 0;
+    gs->lastCaptureCount = 0;
 
     int8_t* board = Board(gs);
     memset(board, CELL_EMPTY, total);
@@ -697,6 +698,7 @@ int8_t XinQi_Place(GameState* gs, int8_t x, int8_t y, int8_t z) {
 
     // Perform captures on real board, track count
     int captured = DoCapture(gs, color, false);
+    gs->lastCaptureCount = captured;
 
     // Update prevHash and hash (DoCapture already updated hash)
     gs->prevHash = hashBefore;
@@ -839,6 +841,7 @@ int8_t XinQi_Shift(GameState* gs,
 
     // Perform captures on real board, track count
     int captured = DoCapture(gs, color, false);
+    gs->lastCaptureCount = captured;
 
     gs->moveCount++;
 

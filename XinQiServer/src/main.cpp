@@ -143,11 +143,13 @@ static json resultToJson(int8_t r, GameState* gs, int8_t x, int8_t y, int8_t z)
         j["winner"] = (gs->current == COLOR_BLACK) ? "White" : "Black";
         j["next_player"] = (gs->current == COLOR_BLACK) ? "Black" : "White";
         j["captured"] = json::array();
+        j["captured_count"] = gs->lastCaptureCount;
     } else if (r == RESULT_OK) {
         j["legal"] = true;
         j["terminal"] = !XinQi_HasAnyLegalMove(gs);
         j["next_player"] = (gs->current == COLOR_BLACK) ? "Black" : "White";
         j["captured"] = json::array();
+        j["captured_count"] = gs->lastCaptureCount;
         if (j["terminal"].get<bool>()) {
             j["winner"] = (gs->current == COLOR_BLACK) ? "White" : "Black";
         }

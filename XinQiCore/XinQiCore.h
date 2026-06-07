@@ -48,6 +48,7 @@ struct GameState {
     int32_t moveCount;
     uint64_t hash;         // Zobrist hash of current board
     uint64_t prevHash;     // hash from one move ago (for super-KO)
+    int32_t lastCaptureCount; // stones captured by the most recent move (0 if none)
     // board[0 .. N^3-1] follows in memory (int8_t flat array)
 };
 
