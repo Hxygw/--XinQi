@@ -1418,6 +1418,7 @@
   }
 
   main { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+  @media (max-width: 768px) { main { display: flex; flex-direction: column; } }
 
   /* ── 顶部栏 ── */
   .topbar {
@@ -1457,10 +1458,10 @@
 
   /* ── 布局 ── */
   .game-layout {
-    display: flex; width: 100%;
-    height: calc(100vh - 56px);
+    display: flex; flex: 1; min-height: 0;
+    width: 100%;
   }
-  .board-area { flex: 1; height: 100%; min-width: 0; touch-action: none; }
+  .board-area { flex: 1; min-height: 0; touch-action: none; }
 
   .sidebar {
     width: 260px; margin: 12px 12px 12px 0;
@@ -1676,9 +1677,9 @@
       overflow-y: auto;
     }
     .sidebar.drawer-open { transform: translateX(0); }
-    .game-layout { flex-direction: column; height: calc(100vh - 48px); }
-    .board-area { flex: none; height: calc(100vh - 48px - 56px); touch-action: none; }
-    .topbar { padding: 0 10px; height: 48px; }
+    .game-layout { flex-direction: column; flex: 1; height: auto; overflow: hidden; }
+    .board-area { flex: 1; height: auto; min-height: 0; touch-action: none; }
+    .topbar { padding: 0 10px; height: 40px; }
     .topbar-subtitle { display: none; }
     .btn-action { padding: 12px 0; min-height: 44px; font-size: 0.82rem; }
     .btn-action + .btn-action { margin-top: 6px; }
@@ -1732,6 +1733,8 @@
   }
   :global(body) {
     overscroll-behavior: none;
+    margin: 0; padding: 0; overflow: hidden;
+    height: 100dvh; width: 100dvw;
   }
   :global(input), :global(textarea),
   .rules-body, .rules-body * {
