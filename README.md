@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="开发文档/成品图/芯棋%20XinQi%20暗色系-中文-首页.png" alt="芯棋 XinQi" width="720">
+  <img src="开发文档/成品图/芯棋%20XinQi%20亮色系-中文-首页.png" alt="芯棋 XinQi" width="720">
 </p>
 
 <h1 align="center">芯棋 · XinQi</h1>
