@@ -497,7 +497,14 @@
 
   function browseGo(step: number) {
     if (!replaySteps) return;
-    applyBrowseStep(Math.max(0, Math.min(step, replaySteps.length - 1)));
+    const oldStep = browseStep;
+    const newStep = Math.max(0, Math.min(step, replaySteps.length - 1));
+    // 前进时播放对应音效
+    if (newStep > oldStep && newStep < replaySteps.length) {
+      const s = replaySteps[newStep];
+      if (s.last_move_is_move) playShift(); else playPlace();
+    }
+    applyBrowseStep(newStep);
   }
 
   function handleSectionChange(axis: string | null, pos: number) {
