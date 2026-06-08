@@ -499,10 +499,21 @@
     if (!replaySteps) return;
     const oldStep = browseStep;
     const newStep = Math.max(0, Math.min(step, replaySteps.length - 1));
-    // 前进时播放对应音效
+    // 前进时播放音效
     if (newStep > oldStep && newStep < replaySteps.length) {
       const s = replaySteps[newStep];
       if (s.last_move_is_move) playShift(); else playPlace();
+      // 检测是否发生了提子：比较两步间对方棋子数量
+      const prev = replaySteps[oldStep];
+      if (prev && s.board && prev.board) {
+        const enemyColor = s.current_player === "Black" ? 1 : 2; // 走棋方是对手的颜色
+        let before = 0, after = 0;
+        for (let i = 0; i < s.board.length; i++) {
+          if (prev.board[i] === enemyColor) before++;
+          if (s.board[i] === enemyColor) after++;
+        }
+        if (after < before) playCapture();
+      }
     }
     applyBrowseStep(newStep);
   }
