@@ -567,7 +567,7 @@ int main()
         {"Access-Control-Allow-Headers", "Content-Type"},
     });
 
-    // ── 静态文件：前端 dist/ ──
+    // ── 静态文件 + SPA fallback ──
     // 从 exe 所在目录查找 dist/
     std::string distPath;
     auto exeDir = fs::path(__argv[0]).parent_path();
@@ -579,41 +579,51 @@ int main()
     for (auto& p : candidates) {
         if (fs::exists(p)) { distPath = p; break; }
     }
+
     if (!distPath.empty()) {
-        svr.set_mount_point("/", distPath);
         printf("Frontend: %s\n", distPath.c_str());
+        // 手动处理静态文件 + SPA fallback，确保 CORS 头生效
+        svr.Get(R"(/(.*))", [distPath](const httplib::Request& req, httplib::Response& res) {
+            if (req.path.find("/api/") == 0) {
+                res.status = 404;
+                res.set_content("{\"error\":\"not found\"}", "application/json");
+                return;
+            }
+            std::string filePath = (fs::path(distPath) / req.path.substr(1)).string();
+            if (req.path == "/") filePath = (fs::path(distPath) / "index.html").string();
+            std::ifstream f(filePath, std::ios::binary);
+            if (f.is_open()) {
+                std::string content((std::istreambuf_iterator<char>(f)), {});
+                // 根据扩展名设置 Content-Type
+                auto ext = fs::path(filePath).extension().string();
+                if (ext == ".html") res.set_content(content, "text/html; charset=utf-8");
+                else if (ext == ".css") res.set_content(content, "text/css; charset=utf-8");
+                else if (ext == ".js") res.set_content(content, "application/javascript; charset=utf-8");
+                else if (ext == ".json") res.set_content(content, "application/json");
+                else if (ext == ".png") res.set_content(content, "image/png");
+                else if (ext == ".svg") res.set_content(content, "image/svg+xml");
+                else if (ext == ".ico") res.set_content(content, "image/x-icon");
+                else res.set_content(content, "application/octet-stream");
+            } else {
+                // SPA fallback: 返回 index.html
+                std::string indexPath = (fs::path(distPath) / "index.html").string();
+                std::ifstream fi(indexPath);
+                if (fi.is_open()) {
+                    std::string content((std::istreambuf_iterator<char>(fi)), {});
+                    res.set_content(content, "text/html; charset=utf-8");
+                } else {
+                    res.status = 404;
+                    res.set_content("Not found", "text/plain");
+                }
+            }
+        });
     } else {
-        printf("Warning: dist/ not found at %s\n", distPath.c_str());
-        // 根路径返回简单提示
+        printf("Warning: dist/ not found\n");
         svr.Get("/", [](const httplib::Request&, httplib::Response& res) {
             res.set_content("<h1>XinQi Server Running</h1>"
-                            "<p>Frontend not built. Run <code>cd xinqi-frontend && npm run build</code></p>"
-                            "<p>API: <a href='/api/state'>/api/state</a></p>", "text/html");
+                            "<p>Frontend not built.</p>", "text/html");
         });
     }
-
-    // ── 前端 SPA fallback：所有非 /api/ 路由返回 index.html ──
-    svr.Get(R"(/(.*))", [&distPath](const httplib::Request& req, httplib::Response& res) {
-        if (req.path.find("/api/") == 0) {
-            res.status = 404;
-            res.set_content("{\"error\":\"not found\"}", "application/json");
-            return;
-        }
-        // 如果是静态文件（有扩展名），让 httplib 走默认 404
-        if (req.path.find_last_of('.') != std::string::npos) {
-            res.status = 404;
-            return;
-        }
-        // SPA fallback
-        std::string indexPath = distPath.empty() ? (fs::current_path() / "dist" / "index.html").string() : (fs::path(distPath) / "index.html").string();
-        std::ifstream f(indexPath);
-        if (f.is_open()) {
-            std::string content((std::istreambuf_iterator<char>(f)), {});
-            res.set_content(content, "text/html");
-        } else {
-            res.set_content("Frontend not built yet.", "text/plain");
-        }
-    });
 
     // ── 启动 ──
     int port = 8090;
