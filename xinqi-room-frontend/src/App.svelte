@@ -855,7 +855,7 @@
               <div class="section-label">{t("sidebar.board_size")}</div>
               <div class="size-buttons">
                 {#each [3, 4, 5, 6, 7] as s}
-                  <button class="size-btn" class:active={N === s} onclick={() => { N = s; checker.reinit(N); historyHashes = new Set(); }}>
+                  <button class="size-btn" class:active={N === s} onclick={() => { N = s; board = new Uint8Array(s * s * s); checker.reinit(N); historyHashes = new Set(); vacancyOwners = new Map(); moveMode = false; refreshInnerCores(); }}>
                     {s}³{#if N === s}<svg class="check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{/if}
                   </button>
                 {/each}
@@ -878,7 +878,7 @@
               <div class="section-label">{t("sidebar.board_size")}</div>
               <div class="size-buttons">
                 {#each [3, 4, 5, 6, 7] as s}
-                  <button class="size-btn" class:active={N === s} onclick={() => { N = s; checker.reinit(N); historyHashes = new Set(); }}>
+                  <button class="size-btn" class:active={N === s} onclick={() => { N = s; board = new Uint8Array(s * s * s); checker.reinit(N); historyHashes = new Set(); vacancyOwners = new Map(); moveMode = false; refreshInnerCores(); }}>
                     {s}³{#if N === s}<svg class="check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{/if}
                   </button>
                 {/each}
