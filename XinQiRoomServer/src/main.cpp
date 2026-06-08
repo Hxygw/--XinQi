@@ -176,6 +176,8 @@ static void cleanupThread() {
 // ══════════════════════════════════════════════════════════════
 
 int main() {
+    // 日志文件，崩溃时可查看 crasher.log
+    freopen("crasher.log", "w", stderr);
     try {
     httplib::Server svr;
 
@@ -602,7 +604,15 @@ int main() {
     }
     return 0;
     } catch (const std::exception& e) {
-        printf("FATAL: %s\n", e.what());
+        fprintf(stderr, "FATAL: %s\n", e.what());
+        printf("FATAL: %s\nCheck crasher.log for details.\n", e.what());
+        printf("Press Enter to exit..."); getchar();
+        return 1;
+    } catch (...) {
+        fprintf(stderr, "FATAL: unknown exception\n");
+        printf("FATAL: unknown exception\nCheck crasher.log.\n");
+        printf("Press Enter to exit..."); getchar();
         return 1;
     }
 }  
+  
