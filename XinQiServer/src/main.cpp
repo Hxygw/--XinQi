@@ -368,16 +368,22 @@ int main()
     // ── GET /api/record/list ──
     svr.Get("/api/record/list", [](const httplib::Request&, httplib::Response& res) {
         addCors(res);
-        fs::create_directories("records");
-        json files = json::array();
-        for (auto& entry : fs::directory_iterator("records")) {
-            if (entry.path().extension() == ".json") {
-                files.push_back(entry.path().filename().string());
+        try {
+            fs::create_directories("records");
+            json files = json::array();
+            for (auto& entry : fs::directory_iterator("records")) {
+                if (entry.path().extension() == ".json") {
+                    files.push_back(entry.path().filename().u8string());
+                }
             }
+            json j;
+            j["files"] = files;
+            res.set_content(j.dump(), "application/json");
+        } catch (const std::exception& e) {
+            json err; err["error"] = e.what();
+            res.status = 500;
+            res.set_content(err.dump(), "application/json");
         }
-        json j;
-        j["files"] = files;
-        res.set_content(j.dump(), "application/json");
     });
 
     // ── GET /api/record/get ──
