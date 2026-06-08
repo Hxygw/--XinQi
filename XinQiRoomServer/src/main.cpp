@@ -197,7 +197,7 @@ int main() {
     svr.Post("/api/room/create", [](const httplib::Request& req, httplib::Response& res) {
         try {
             auto body = json::parse(req.body);
-            int boardSize = body.value("board_size", 5);
+            int boardSize = 5;
             if (boardSize < 3 || boardSize > MAX_BOARD_SIZE) {
                 res.status = 400;
                 res.set_content(R"({"error":"invalid board_size"})", "application/json");
@@ -211,12 +211,7 @@ int main() {
 
             std::string hostId = randomId();
             Room room;
-            room.gs = XinQi_Create((int8_t)boardSize);
-            if (!room.gs) {
-                res.status = 500;
-                res.set_content(R"({"error":"create failed"})", "application/json");
-                return;
-            }
+            room.gs = nullptr;
             room.hostId = hostId;
             room.blackId = hostId;
             room.boardSize = boardSize;
@@ -333,18 +328,12 @@ int main() {
                 res.set_content(R"({"error":"waiting for opponent"})", "application/json");
                 return;
             }
-            // 允许房主在开局前修改棋盘大小
-            int newSize = body.value("board_size", room.boardSize);
-            if (newSize != room.boardSize) {
-                if (room.gs) XinQi_Destroy(room.gs);
-                room.gs = XinQi_Create((int8_t)newSize);
-                if (!room.gs) { res.status = 500; res.set_content(R"({"error":"create failed"})", "application/json"); return; }
-                room.boardSize = newSize;
-            }
-            if (!room.gs) {
-                room.gs = XinQi_Create((int8_t)room.boardSize);
-                if (!room.gs) { res.status = 500; res.set_content(R"({"error":"create failed"})", "application/json"); return; }
-            }
+            // 开始游戏时创建游戏状态，棋盘大小由前端决定
+            int boardSize = body.value("board_size", 5);
+            if (boardSize < 3 || boardSize > MAX_BOARD_SIZE) boardSize = 5;
+            room.gs = XinQi_Create((int8_t)boardSize);
+            if (!room.gs) { res.status = 500; res.set_content(R"({"error":"create failed"})", "application/json"); return; }
+            room.boardSize = boardSize;
             room.started = true;
             printRooms();
             res.set_content(R"({"ok":true})", "application/json");

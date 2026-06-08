@@ -59,14 +59,6 @@ export const roomClient = {
     });
   },
 
-  /** 设置棋盘大小（房主，开局前） */
-  setSize(code: string, boardSize: number): Promise<{ ok: boolean }> {
-    return req(`/api/room/${code}/set_size`, {
-      method: "POST",
-      body: JSON.stringify({ board_size: boardSize }),
-    });
-  },
-
   /** 开始游戏（房主发起） */
   startGame(code: string, playerId: string, boardSize?: number): Promise<{ ok: boolean }> {
     return req(`/api/room/${code}/start`, {
