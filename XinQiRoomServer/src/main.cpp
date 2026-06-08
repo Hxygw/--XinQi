@@ -49,6 +49,7 @@ struct Room {
     std::chrono::steady_clock::time_point createdAt;
     std::time_t createdAtTime = 0;  // 可读时间
     bool hasGuest = false;    // 是否有客人加入
+    bool guestReady = false;  // 客人是否已准备
 };
 
 static std::map<std::string, Room> g_rooms;
@@ -316,6 +317,24 @@ int main() {
         } catch (...) { res.status = 400; res.set_content(R"({"error":"invalid"})", "application/json"); }
     });
 
+    // ── POST /api/room/:code/ready ──
+    svr.Post(R"(/api/room/(\d+)/ready)", [](const httplib::Request& req, httplib::Response& res) {
+        try {
+            std::string code = req.matches[1];
+            auto body = json::parse(req.body);
+            std::string playerId = body["player_id"];
+
+            std::lock_guard<std::mutex> lock(g_roomsMutex);
+            auto it = g_rooms.find(code);
+            if (it == g_rooms.end()) { res.status = 404; res.set_content(R"({"error":"not found"})", "application/json"); return; }
+            Room& room = it->second;
+            if (room.whiteId != playerId) { res.status = 403; res.set_content(R"({"error":"only guest can ready"})", "application/json"); return; }
+            if (room.started) { res.status = 400; res.set_content(R"({"error":"already started"})", "application/json"); return; }
+            room.guestReady = true;
+            res.set_content(R"({"ok":true})", "application/json");
+        } catch (...) { res.status = 400; res.set_content(R"({"error":"invalid"})", "application/json"); }
+    });
+
     // ── POST /api/room/:code/start ──
     svr.Post(R"(/api/room/(\d+)/start)", [](const httplib::Request& req, httplib::Response& res) {
         try {
@@ -344,6 +363,11 @@ int main() {
             if (!room.hasGuest) {
                 res.status = 400;
                 res.set_content(R"({"error":"waiting for opponent"})", "application/json");
+                return;
+            }
+            if (!room.guestReady) {
+                res.status = 400;
+                res.set_content(R"({"error":"guest not ready"})", "application/json");
                 return;
             }
             // 开始游戏时创建游戏状态，棋盘大小由前端决定
@@ -539,12 +563,60 @@ int main() {
         json j;
         j["board_size"] = room.boardSize;
         j["has_guest"] = room.hasGuest;
+        j["guest_ready"] = room.guestReady;
         if (room.hasGuest) j["guest_id"] = room.whiteId;
         j["host_id"] = room.hostId;
         j["started"] = room.started;
         j["terminated"] = room.terminated;
         if (room.terminated) j["winner"] = room.winner;
         res.set_content(j.dump(), "application/json");
+    });
+
+    // ── POST /api/room/:code/close ──
+    svr.Post(R"(/api/room/(\d+)/close)", [](const httplib::Request& req, httplib::Response& res) {
+        try {
+            std::string code = req.matches[1];
+            auto body = json::parse(req.body);
+            std::string playerId = body["player_id"];
+
+            std::lock_guard<std::mutex> lock(g_roomsMutex);
+            auto it = g_rooms.find(code);
+            if (it == g_rooms.end()) { res.status = 404; res.set_content(R"({"error":"not found"})", "application/json"); return; }
+            Room& room = it->second;
+            if (room.hostId != playerId) { res.status = 403; res.set_content(R"({"error":"only host can close"})", "application/json"); return; }
+            if (room.gs) XinQi_Destroy(room.gs);
+            g_rooms.erase(it);
+            printRooms();
+            res.set_content(R"({"ok":true})", "application/json");
+        } catch (...) { res.status = 400; res.set_content(R"({"error":"invalid"})", "application/json"); }
+    });
+
+    // ── POST /api/room/:code/reset ──
+    svr.Post(R"(/api/room/(\d+)/reset)", [](const httplib::Request& req, httplib::Response& res) {
+        try {
+            std::string code = req.matches[1];
+            auto body = json::parse(req.body);
+            std::string playerId = body["player_id"];
+
+            std::lock_guard<std::mutex> lock(g_roomsMutex);
+            auto it = g_rooms.find(code);
+            if (it == g_rooms.end()) { res.status = 404; res.set_content(R"({"error":"not found"})", "application/json"); return; }
+            Room& room = it->second;
+            if (room.hostId != playerId) { res.status = 403; res.set_content(R"({"error":"only host can reset"})", "application/json"); return; }
+            if (!room.started) { res.status = 400; res.set_content(R"({"error":"not started"})", "application/json"); return; }
+
+            // 重置游戏状态
+            room.started = false;
+            room.terminated = false;
+            room.winner = "None";
+            room.moves.clear();
+            room.guestReady = false;
+            if (room.gs) XinQi_Destroy(room.gs);
+            room.gs = XinQi_Create((int8_t)room.boardSize);
+            if (!room.gs) { res.status = 500; res.set_content(R"({"error":"recreate failed"})", "application/json"); return; }
+            printRooms();
+            res.set_content(R"({"ok":true})", "application/json");
+        } catch (...) { res.status = 400; res.set_content(R"({"error":"invalid"})", "application/json"); }
     });
 
     // ── 静态文件 + SPA fallback ──

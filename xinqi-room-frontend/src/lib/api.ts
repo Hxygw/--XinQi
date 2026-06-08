@@ -35,6 +35,7 @@ export interface JoinRoomResponse {
 export interface RoomInfoResponse {
   board_size: number;
   has_guest: boolean;
+  guest_ready: boolean;
   host_id: string;
   started: boolean;
   terminated: boolean;
@@ -92,6 +93,30 @@ export const roomClient = {
   /** 获取房间信息（含 opponent 信息和是否开始） */
   getInfo(code: string): Promise<RoomInfoResponse> {
     return req(`/api/room/${code}/info`);
+  },
+
+  /** 客人准备 */
+  setReady(code: string, playerId: string): Promise<{ ok: boolean }> {
+    return req(`/api/room/${code}/ready`, {
+      method: "POST",
+      body: JSON.stringify({ player_id: playerId }),
+    });
+  },
+
+  /** 房主关闭房间 */
+  closeRoom(code: string, playerId: string): Promise<{ ok: boolean }> {
+    return req(`/api/room/${code}/close`, {
+      method: "POST",
+      body: JSON.stringify({ player_id: playerId }),
+    });
+  },
+
+  /** 房主重置游戏（返回房间） */
+  resetGame(code: string, playerId: string): Promise<{ ok: boolean }> {
+    return req(`/api/room/${code}/reset`, {
+      method: "POST",
+      body: JSON.stringify({ player_id: playerId }),
+    });
   },
 };
 

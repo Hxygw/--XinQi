@@ -60,6 +60,7 @@
   let roomHostId = $state("");
   let joinCodeInput = $state("");
   let waitingOpponent = $state(false);
+  let guestReady = $state(false);
   let gameStarted = $state(false);
 
   // 本地 PvP 双玩家 ID（本地对战用）
@@ -242,8 +243,24 @@
   async function handleLeaveRoom() {
     if (pollTimer) clearTimeout(pollTimer);
     pollTimer = null;
+
+    // 房主离开时关闭房间
+    if (roomMode === "host" && roomCode && playerId) {
+      try {
+        await roomClient.closeRoom(roomCode, playerId);
+      } catch {
+        // 忽略关闭失败
+      }
+    }
+
+    resetRoomState();
+  }
+
+  /** 重置房间本地状态 */
+  function resetRoomState() {
     roomMode = "none";
     gameStarted = false;
+    guestReady = false;
     localBlackId = "";
     localWhiteId = "";
     roomCode = "";
@@ -263,6 +280,16 @@
     refreshInnerCores();
   }
 
+  async function handleGuestReady() {
+    try {
+      await roomClient.setReady(roomCode, playerId);
+      guestReady = true;
+      showNotification(t("room.ready_done"));
+    } catch (e) {
+      showNotification(`${t("error.operation_failed")}: ${(e as Error).message}`, 5000);
+    }
+  }
+
   // ── 轮询 ──
 
   function startPollInfo() {
@@ -274,6 +301,7 @@
 
     try {
       const info = await roomClient.getInfo(roomCode);
+      guestReady = info.guest_ready;
       if (!info.started && info.has_guest && roomMode === "host") {
         waitingOpponent = false;
       }
@@ -282,8 +310,13 @@
         startRoomGame();
         return;
       }
-    } catch {
-      // 忽略轮询错误
+    } catch (e) {
+      // 404 → 房间已关闭
+      if ((e as Error).message?.includes("HTTP 404")) {
+        showNotification(t("room.room_closed"), 5000);
+        resetRoomState();
+        return;
+      }
     }
 
     if (!gameStarted) {
@@ -334,8 +367,13 @@
         showNotification(t("notif.game_over"), 3000);
         return;
       }
-    } catch {
-      // 忽略
+    } catch (e) {
+      // 404 → 房间已关闭
+      if ((e as Error).message?.includes("HTTP 404")) {
+        showNotification(t("room.room_closed"), 5000);
+        resetRoomState();
+        return;
+      }
     }
 
     // 继续轮询如果不是自己的回合
@@ -609,6 +647,7 @@
     if (gameStarted) return; // 游戏中不可修改
     N = newN; sectionAxis = null;
     checker.reinit(N);
+    historyHashes = new Set();
     board = new Uint8Array(N * N * N);
     refreshInnerCores();
   }
@@ -635,6 +674,53 @@
       refreshInnerCores();
     } else {
       handleLeaveRoom();
+    }
+  }
+
+  async function handleReturnToRoom() {
+    if (roomMode !== "playing") return;
+
+    if (playerRole === "Black") {
+      // 房主 → 调用 reset API
+      try {
+        await roomClient.resetGame(roomCode, playerId);
+        roomMode = "host";
+        gameStarted = false;
+        waitingOpponent = false;
+        guestReady = false;
+        terminal = false;
+        winner = undefined;
+        moveCount = 0;
+        const total = N * N * N;
+        board = new Uint8Array(total);
+        currentPlayer = "Black";
+        vacancyOwners = new Map();
+        historyHashes = new Set();
+        moveMode = false;
+        refreshInnerCores();
+        startPollInfo();
+        showNotification(t("room.return_room"));
+      } catch (e) {
+        showNotification(`${t("error.operation_failed")}: ${(e as Error).message}`, 5000);
+      }
+    } else {
+      // 客人 → 仅重置本地状态
+      roomMode = "guest";
+      gameStarted = false;
+      waitingOpponent = true;
+      guestReady = false;
+      terminal = false;
+      winner = undefined;
+      moveCount = 0;
+      const total = N * N * N;
+      board = new Uint8Array(total);
+      currentPlayer = "Black";
+      vacancyOwners = new Map();
+      historyHashes = new Set();
+      moveMode = false;
+      refreshInnerCores();
+      startPollInfo();
+      showNotification(t("room.return_room"));
     }
   }
 </script>
@@ -758,7 +844,7 @@
               <div class="section-label">{t("sidebar.board_size")}</div>
               <div class="size-buttons">
                 {#each [3, 4, 5, 6, 7] as s}
-                  <button class="size-btn" class:active={N === s} onclick={() => { N = s; checker.reinit(N); }}>
+                  <button class="size-btn" class:active={N === s} onclick={() => { N = s; checker.reinit(N); historyHashes = new Set(); }}>
                     {s}³{#if N === s}<svg class="check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{/if}
                   </button>
                 {/each}
@@ -775,18 +861,19 @@
           {#if roomMode === "host" && !waitingOpponent && !gameStarted}
             <div class="room-status">
               <p>{t("room.guest")} {t("room.joined")}</p>
+              <p style="font-size:0.8rem">{guestReady ? t("room.guest_ready") : t("room.guest_not_ready")}</p>
             </div>
             <div class="section-group">
               <div class="section-label">{t("sidebar.board_size")}</div>
               <div class="size-buttons">
                 {#each [3, 4, 5, 6, 7] as s}
-                  <button class="size-btn" class:active={N === s} onclick={() => { N = s; checker.reinit(N); }}>
+                  <button class="size-btn" class:active={N === s} onclick={() => { N = s; checker.reinit(N); historyHashes = new Set(); }}>
                     {s}³{#if N === s}<svg class="check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{/if}
                   </button>
                 {/each}
               </div>
             </div>
-            <button class="btn-action primary" onclick={handleHostStartGame}>
+            <button class="btn-action primary" onclick={handleHostStartGame} disabled={!guestReady}>
               {t("room.start_game")}
             </button>
             <button class="btn-action" onclick={handleLeaveRoom}>
@@ -797,8 +884,17 @@
           {#if roomMode === "guest" && waitingOpponent}
             <div class="room-status">
               <div class="spinner"></div>
-              <p>{t("room.waiting_opponent")}</p>
+              <p>{t("room.waiting_host")}</p>
             </div>
+            {#if guestReady}
+              <button class="btn-action primary" disabled>
+                {t("room.ready_done")}
+              </button>
+            {:else}
+              <button class="btn-action primary" onclick={handleGuestReady}>
+                {t("room.ready")}
+              </button>
+            {/if}
             <button class="btn-action" onclick={handleLeaveRoom}>
               {t("room.leave")}
             </button>
@@ -806,10 +902,18 @@
 
         {:else}
           <!-- 游戏中 -->
-          <button class="btn-action primary" onclick={handleExitGame}>
-            <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            {t("sidebar.new_game")}
-          </button>
+          {#if terminal && roomMode === "playing"}
+            <!-- 终局：返回房间 -->
+            <button class="btn-action primary" onclick={handleReturnToRoom}>
+              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              {t("room.return_room")}
+            </button>
+          {:else}
+            <button class="btn-action primary" onclick={handleExitGame}>
+              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              {t("sidebar.new_game")}
+            </button>
+          {/if}
 
           {#if !localPvP}
             <div class="room-status">

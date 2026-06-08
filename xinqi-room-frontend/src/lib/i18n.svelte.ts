@@ -54,6 +54,13 @@ const dict: Translations = {
   "room.host": { zh: "房主", en: "Host" },
   "room.guest": { zh: "客人", en: "Guest" },
   "room.joined": { zh: "已加入", en: "joined" },
+  "room.waiting_host": { zh: "等待房主开始...", en: "Waiting for host to start..." },
+  "room.ready": { zh: "准备", en: "Ready" },
+  "room.ready_done": { zh: "已准备", en: "Ready ✓" },
+  "room.guest_ready": { zh: "客人已准备", en: "Guest ready" },
+  "room.guest_not_ready": { zh: "客人未准备", en: "Guest not ready" },
+  "room.return_room": { zh: "返回房间", en: "Return to Room" },
+  "room.room_closed": { zh: "房间已关闭", en: "Room closed" },
 
   // 玩家
   "player.black": { zh: "黑方", en: "Black" },
