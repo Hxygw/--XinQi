@@ -1,0 +1,6 @@
+// XinQiServer icon resource
+// Compile with MSVC resource compiler
+#include <windows.h>
+
+// Main application icon
+IDI_APP ICON "icon.ico"
