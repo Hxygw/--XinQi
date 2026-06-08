@@ -15,6 +15,8 @@ export interface PlaceResult {
   terminal: boolean;
   winner?: "Black" | "White";
   error?: string;
+  /** 终局类型：1=清台 2=侵入 3=无棋可走（仅 terminal=true 时有意义） */
+  result_code?: number;
   /** 执行后的新棋盘（每次返回新对象，确保响应式） */
   board: Uint8Array;
 }
@@ -26,6 +28,8 @@ export interface ShiftResult {
   terminal: boolean;
   winner?: "Black" | "White";
   error?: string;
+  /** 终局类型：1=清台 2=侵入 3=无棋可走（仅 terminal=true 时有意义） */
+  result_code?: number;
   board: Uint8Array;
 }
 
@@ -57,6 +61,7 @@ function findAndCapture(board: Uint8Array, playIdx: number, player: 1 | 2, N: nu
   for (let axis = 0; axis < 3; axis++) {
     const section = sectionCoords[axis];
     const visited = new Uint8Array(N * N * N);
+    const neighbors = tbl.neigh[axis];
 
     // 遍历该截面中所有对手棋子，找到连通块
     for (const ci of section) {
@@ -70,10 +75,6 @@ function findAndCapture(board: Uint8Array, playIdx: number, player: 1 | 2, N: nu
       while (bfsHead < bfsQueue.length) {
         const cur = bfsQueue[bfsHead++];
         group.push(cur);
-        const p = to3D(cur, N);
-        // 根据截面轴取 4 个面内邻居
-        const idx4 = (axis === 0) ? p.y * 4 : (axis === 1) ? p.x * 4 : p.x * 4;
-        const neighbors = tbl.neigh[axis];
         for (let n = 0; n < 4; n++) {
           const ni = neighbors[cur * 4 + n];
           if (ni >= 0 && !visited[ni] && board[ni] === opponent) {
@@ -91,11 +92,9 @@ function findAndCapture(board: Uint8Array, playIdx: number, player: 1 | 2, N: nu
       // 检查该连通块在截面内是否有气
       let hasLib = false;
       for (const gi of group) {
-        const p = to3D(gi, N);
-        const idx4 = (axis === 0) ? p.y * 4 : (axis === 1) ? p.x * 4 : p.x * 4;
         for (let n = 0; n < 4; n++) {
           const ni = neighbors[gi * 4 + n];
-          if (ni >= 0 && board[ni] === 0) {
+          if (ni >= 0 && (board[ni] === 0 || board[ni] === 3 || board[ni] === 4)) {
             hasLib = true;
             break;
           }
@@ -126,13 +125,19 @@ export function executePlace(
   moveCount: number,
   vacancyOwners: Map<number, "Black" | "White">,
 ): PlaceResult {
+  // 0. 己方内芯空位不可落子（Core: ERR_CORE_VACANCY）
+  const playerName = player === 1 ? "Black" : "White";
+  const opponentName = player === 1 ? "White" : "Black";
+  if (vacancyOwners.get(idx) === playerName) {
+    return { legal: false, captured: [], terminal: false, error: "core_vacancy", board: new Uint8Array(board) };
+  }
+
   const isFirst = moveCount === 0;
   const result = checker.checkMove(board, idx, player, historyHashes, isFirst);
   if (!result.legal) {
     return { legal: false, captured: [], terminal: false, error: result.reason, board: new Uint8Array(board) };
   }
 
-  const opponentName = player === 1 ? "White" : "Black";
   const wasOpponentVacancy = vacancyOwners.get(idx) === opponentName;
 
   const newBoard = new Uint8Array(board);
@@ -143,7 +148,7 @@ export function executePlace(
   // 侵入获胜
   if (wasOpponentVacancy) {
     vacancyOwners.delete(idx);
-    return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
+    return { legal: true, captured: captures, terminal: true, result_code: 2, winner: player === 1 ? "Black" : "White", board: newBoard };
   }
 
   // 清台：触发吃子后对方无内芯
@@ -151,13 +156,13 @@ export function executePlace(
     const cores = findAllInnerCores(newBoard, checker.N);
     const oppCores = player === 1 ? cores.white : cores.black;
     if (oppCores.length === 0) {
-      return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
+      return { legal: true, captured: captures, terminal: true, result_code: 1, winner: player === 1 ? "Black" : "White", board: newBoard };
     }
   }
 
   // 无棋可走
   if (!hasAnyLegalMove(newBoard, player, checker, vacancyOwners)) {
-    return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
+    return { legal: true, captured: captures, terminal: true, result_code: 3, winner: player === 1 ? "Black" : "White", board: newBoard };
   }
 
   return { legal: true, captured: captures, terminal: false, board: newBoard };
@@ -193,19 +198,19 @@ export function executeShift(
   const captures = findAndCapture(newBoard, targetIdx, player, checker.N);
 
   if (wasOpponentVacancy) {
-    return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
+    return { legal: true, captured: captures, newVacancy, terminal: true, result_code: 2, winner: player === 1 ? "Black" : "White", board: newBoard };
   }
 
   if (captures.length > 0) {
     const cores = findAllInnerCores(newBoard, checker.N);
     const oppCores = player === 1 ? cores.white : cores.black;
     if (oppCores.length === 0) {
-      return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
+      return { legal: true, captured: captures, newVacancy, terminal: true, result_code: 1, winner: player === 1 ? "Black" : "White", board: newBoard };
     }
   }
 
   if (!hasAnyLegalMove(newBoard, player, checker, vacancyOwners)) {
-    return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
+    return { legal: true, captured: captures, newVacancy, terminal: true, result_code: 3, winner: player === 1 ? "Black" : "White", board: newBoard };
   }
 
   return { legal: true, captured: captures, newVacancy, terminal: false, board: newBoard };
@@ -227,6 +232,8 @@ function hasAnyLegalMove(
   }
   for (let i = 0; i < total; i++) {
     if (board[i] !== 0) continue;
+    // 己方内芯空位不可填
+    if (vacancyOwners.get(i) === ownerName) continue;
     if (checker.checkMove(board, i, player, undefined, false).legal) return true;
   }
   // 挪子：从内芯出发到空位

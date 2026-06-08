@@ -27,6 +27,8 @@ export interface GameState {
   vacancy_owners: Record<string, "Black" | "White">;
   terminal: boolean;
   winner?: "Black" | "White" | "Draw";
+  /** 上一步是否为挪子（房间轮询用音效判断） */
+  last_is_shift?: boolean;
 }
 
 /** 服务端 /api/play 响应 */

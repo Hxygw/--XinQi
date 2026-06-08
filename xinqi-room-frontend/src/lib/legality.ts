@@ -71,9 +71,15 @@ export class LegalityChecker {
     historyHashes?: Set<number>,
     isFirstMove?: boolean,
   ): CheckResult {
-    // 1. 空位检查
-    if (board[idx] !== 0) {
-      return { legal: false, reason: "occupied" };
+    // 1. 空位检查（对手内芯空位视为可落子——核心入侵）
+    const cell = board[idx];
+    if (cell !== 0) {
+      // 对手内芯空位：合法（由 caller 处理核心入侵逻辑）
+      const oppVacancy = (player === 1 && cell === 4) || (player === 2 && cell === 3);
+      if (!oppVacancy) {
+        return { legal: false, reason: "occupied" };
+      }
+      // 对手空位视为空，继续后续检查（自杀/超级劫）
     }
 
     // 2. 先手第一步禁天元/最内层
@@ -143,9 +149,14 @@ export class LegalityChecker {
       return { legal: false, reason: "not_inner_core" };
     }
 
-    // 3. 目标为空位
-    if (board[targetIdx] !== 0) {
-      return { legal: false, reason: "target_occupied" };
+    // 3. 目标为空位或对手内芯空位
+    const targetCell = board[targetIdx];
+    if (targetCell !== 0) {
+      const oppVacancy = (player === 1 && targetCell === 4) || (player === 2 && targetCell === 3);
+      if (!oppVacancy) {
+        return { legal: false, reason: "target_occupied" };
+      }
+      // 对手空位：合法（核心入侵，由 caller 处理）
     }
 
     // 4. 目标不是己方内芯空位

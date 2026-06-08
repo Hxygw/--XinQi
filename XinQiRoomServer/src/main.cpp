@@ -155,6 +155,15 @@ static json stateToJson(const Room& room) {
     }
     j["vacancy_indices"] = vac;
     j["vacancy_owners"] = vacOwners;
+
+    // 上一步是否为挪子（用于前端音效判断）
+    j["last_is_shift"] = false;
+    if (!room.moves.empty()) {
+        const json& lastMove = room.moves.back();
+        if (lastMove.contains("is_move") && lastMove["is_move"].get<bool>()) {
+            j["last_is_shift"] = true;
+        }
+    }
     return j;
 }
 
@@ -502,10 +511,10 @@ int main() {
             // 构建响应（复用 resultToJson 逻辑）
             json j;
             if (r >= 1) {
-                // 胜利
+                // 胜利（winner 始终是刚下的人）
                 j["legal"] = true; j["terminal"] = true;
                 j["result_code"] = r;
-                j["winner"] = (room.gs->current == COLOR_BLACK) ? "White" : "Black";
+                j["winner"] = (played == COLOR_BLACK) ? "Black" : "White";
                 j["next_player"] = (room.gs->current == COLOR_BLACK) ? "Black" : "White";
                 j["captured"] = json::array();
                 j["captured_count"] = room.gs->lastCaptureCount;
@@ -516,7 +525,8 @@ int main() {
                 j["captured"] = json::array();
                 j["captured_count"] = room.gs->lastCaptureCount;
                 if (j["terminal"].get<bool>()) {
-                    j["winner"] = (room.gs->current == COLOR_BLACK) ? "White" : "Black";
+                    // 对手无棋可走，刚下的人获胜
+                    j["winner"] = (played == COLOR_BLACK) ? "Black" : "White";
                 }
             } else {
                 j["legal"] = false;
@@ -573,7 +583,7 @@ int main() {
             json j;
             if (r >= 1) {
                 j["legal"] = true; j["terminal"] = true; j["result_code"] = r;
-                j["winner"] = (room.gs->current == COLOR_BLACK) ? "White" : "Black";
+                j["winner"] = (played == COLOR_BLACK) ? "Black" : "White";
                 j["next_player"] = (room.gs->current == COLOR_BLACK) ? "Black" : "White";
                 j["captured"] = json::array(); j["captured_count"] = room.gs->lastCaptureCount;
                 j["new_vacancy"] = {{"x", fx}, {"y", fy}, {"z", fz}};
@@ -583,7 +593,7 @@ int main() {
                 j["next_player"] = (room.gs->current == COLOR_BLACK) ? "Black" : "White";
                 j["captured"] = json::array(); j["captured_count"] = room.gs->lastCaptureCount;
                 j["new_vacancy"] = {{"x", fx}, {"y", fy}, {"z", fz}};
-                if (j["terminal"].get<bool>()) j["winner"] = (room.gs->current == COLOR_BLACK) ? "White" : "Black";
+                if (j["terminal"].get<bool>()) j["winner"] = (played == COLOR_BLACK) ? "Black" : "White";
             } else {
                 j["legal"] = false; j["error"] = "illegal";
             }

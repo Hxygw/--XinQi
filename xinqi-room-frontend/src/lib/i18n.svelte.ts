@@ -31,6 +31,7 @@ const dict: Translations = {
   "sidebar.current": { zh: "当前", en: "Current" },
   "sidebar.inner_core": { zh: "内芯", en: "Inner Core" },
   "sidebar.new_game": { zh: "退出游戏", en: "Exit Game" },
+  "sidebar.restart": { zh: "重新开始", en: "Restart" },
   "sidebar.start_game": { zh: "开始游戏", en: "Start Game" },
   "sidebar.board_size": { zh: "棋盘大小", en: "Board Size" },
   "sidebar.section": { zh: "剖面", en: "Section" },
@@ -39,7 +40,7 @@ const dict: Translations = {
   "sidebar.move_mode_hint": { zh: "挪子模式 — 双击目标执行，右键退出", en: "Shift Mode — Double-click target, right-click to exit" },
 
   // 房间模式
-  "room.pvp_local": { zh: "本地对战", en: "Local PvP" },
+  "room.pvp_local": { zh: "本机对弈", en: "Local Play" },
   "room.create_room": { zh: "创建房间", en: "Create Room" },
   "room.join_room": { zh: "加入房间", en: "Join Room" },
   "room.create": { zh: "创建房间", en: "Create Room" },

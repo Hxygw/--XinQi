@@ -380,7 +380,7 @@
 
       // 对手落子音效（防止与己方操作重复播放）
       if (gs.move_count > lastPolledMoveCount) {
-        playMoveSound(gs.terminal, undefined, false, false);
+        playMoveSound(gs.terminal, undefined, false, gs.last_is_shift ?? false);
         lastPolledMoveCount = gs.move_count;
       }
 
@@ -441,7 +441,9 @@
       const result = executePlace(board, idx, player, checker, historyHashes, moveCount, vacancyOwners);
       if (result.legal) {
         board = result.board;
-        playMoveSound(result.terminal, undefined, result.captured.length > 0, false);
+        // force reactivity: executePlace 内可能 delete 了 vacancyOwners
+        vacancyOwners = new Map(vacancyOwners);
+        playMoveSound(result.terminal, result.result_code, result.captured.length > 0, false);
         historyHashes.add(boardHash(board));
         moveCount++;
         if (result.terminal) {
@@ -506,7 +508,9 @@
       const result = executeShift(board, moveSourceIdx, targetIdx, player, checker, historyHashes, ownVac, vacancyOwners);
       if (result.legal) {
         board = result.board;
-        playMoveSound(result.terminal, undefined, result.captured.length > 0, true);
+        // force reactivity: executeShift 内 set 了 vacancyOwners
+        vacancyOwners = new Map(vacancyOwners);
+        playMoveSound(result.terminal, result.result_code, result.captured.length > 0, true);
         historyHashes.add(boardHash(board));
         exitMoveMode();
         moveCount++;
@@ -907,7 +911,7 @@
           <!-- 开始屏幕：三种模式选择 -->
           {#if roomMode === "none"}
             <button class="btn-action primary" onclick={initLocalPvP}>
-              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               {t("room.pvp_local")}
             </button>
 
@@ -916,12 +920,37 @@
               {t("room.create_room")}
             </button>
 
-            <!-- 加入房间输入 -->
+            <!-- 加入房间输入（4位数字验证码） -->
             <div class="section-group">
               <div class="section-label">{t("room.enter_code")}</div>
-              <input class="room-code-input" type="text" bind:value={joinCodeInput} placeholder={t("room.room_code")}
-                onkeydown={(e) => { if (e.key === 'Enter') handleJoinRoom(); }} />
-              <button class="btn-action primary" onclick={handleJoinRoom} disabled={!joinCodeInput.trim()}>
+              <div class="room-code-digits">
+                {#each [0,1,2,3] as i}
+                  <input class="digit-box" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+                    value={joinCodeInput[i] ?? ""}
+                    oninput={(e) => {
+                      const val = (e.target as HTMLInputElement).value;
+                      if (!/^[0-9]?$/.test(val)) { (e.target as HTMLInputElement).value = ""; return; }
+                      const arr = joinCodeInput.split('');
+                      arr[i] = val;
+                      joinCodeInput = arr.join('');
+                      if (val && i < 3) {
+                        const parent = (e.target as HTMLElement).parentElement;
+                        if (parent) { const next = parent.children[i+1] as HTMLInputElement; next?.focus(); }
+                      }
+                    }}
+                    onkeydown={(e) => {
+                      if (e.key === 'Backspace' && !joinCodeInput[i] && i > 0) {
+                        const parent = (e.target as HTMLElement).parentElement;
+                        if (parent) { const prev = parent.children[i-1] as HTMLInputElement; prev?.focus(); }
+                      }
+                      if (e.key === 'Enter' && joinCodeInput.length === 4) handleJoinRoom();
+                    }}
+                    onfocus={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                {/each}
+              </div>
+              <button class="btn-action primary" onclick={handleJoinRoom} disabled={joinCodeInput.length !== 4}>
+                <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
                 {t("room.join")}
               </button>
             </div>
@@ -1020,7 +1049,7 @@
               <!-- 终局（本地引擎）：重新开始 -->
               <button class="btn-action primary" onclick={handleNewLocalGame}>
                 <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-                {t("sidebar.new_game")}
+                {t("sidebar.restart")}
               </button>
             {:else}
               <!-- 终局（房间模式）：返回房间 -->
@@ -1527,6 +1556,11 @@
   }
   .rules-body p { color: var(--rules-body-text); font-size: 0.85rem; line-height: 1.6; }
   .rules-body h3 { color: var(--rules-h3); font-size: 0.9rem; margin-top: 0.4rem; }
+  /* 规则面板无边框滚动条 */
+  .rules-body::-webkit-scrollbar { width: 4px; }
+  .rules-body::-webkit-scrollbar-track { background: transparent; }
+  .rules-body::-webkit-scrollbar-thumb { background: var(--sidebar-scroll); border-radius: 2px; }
+  .rules-body::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
   /* ── 房间 ── */
   .room-status {
@@ -1548,20 +1582,25 @@
     font-family: 'Courier New', monospace;
     margin-top: 4px;
   }
-  .room-code-input {
+  .room-code-digits {
+    display: flex; gap: 8px; justify-content: center;
+    margin: 4px 0;
+  }
+  .digit-box {
     all: unset;
     box-sizing: border-box;
-    width: 100%; padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 0.9rem;
+    width: 48px; height: 52px;
+    border-radius: 10px;
+    font-size: 1.3rem; font-weight: 600;
     text-align: center;
-    letter-spacing: 0.1em;
     background: var(--room-code-input-bg);
-    border: 1px solid var(--room-code-input-border);
+    border: 1.5px solid var(--room-code-input-border);
     color: var(--room-code-input-color);
+    caret-color: var(--accent);
+    transition: border-color 0.15s;
   }
-  .room-code-input::placeholder {
-    color: var(--text-muted);
-    letter-spacing: 0;
+  .digit-box:focus {
+    border-color: var(--accent);
+    outline: none;
   }
 </style>
