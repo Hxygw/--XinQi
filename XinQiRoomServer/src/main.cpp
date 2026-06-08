@@ -39,14 +39,45 @@ struct Room {
     std::string hostId;       // 房主 playerId
     std::string blackId;      // 黑方 playerId (房主)
     std::string whiteId;      // 白方 playerId (加入者)
+    std::string hostAddr;     // 房主 IP 地址
+    std::string guestAddr;    // 客人 IP 地址
     bool started = false;     // 是否已开局
     int boardSize = 5;
     std::chrono::steady_clock::time_point createdAt;
+    std::time_t createdAtTime = 0;  // 可读时间
     bool hasGuest = false;    // 是否有客人加入
 };
 
 static std::map<std::string, Room> g_rooms;
 static std::mutex g_roomsMutex;
+
+// ── 房间信息打印 ──
+
+static std::string timeStr(std::time_t t) {
+    char buf[32];
+    std::strftime(buf, sizeof(buf), "%H:%M:%S", std::localtime(&t));
+    return buf;
+}
+
+static std::string roomStatus(const Room& room) {
+    if (room.terminated) return "终局";
+    if (room.started) return "对局中";
+    if (room.hasGuest) return "等待开局";
+    return "等待加入";
+}
+
+static void printRooms() {
+    printf("\n=== 房间列表 (%zu 个) ===\n", g_rooms.size());
+    for (auto& [code, room] : g_rooms) {
+        printf("  %s  [%s]  %s  %d³  房主: %s",
+            code.c_str(), timeStr(room.createdAtTime).c_str(),
+            roomStatus(room).c_str(), room.boardSize, room.hostAddr.c_str());
+        if (room.hasGuest) printf("  客人: %s", room.guestAddr.c_str());
+        if (room.terminated) printf("  %s胜", room.winner.c_str());
+        printf("\n");
+    }
+    printf("========================\n");
+}
 
 // ── 工具函数 ──
 
@@ -189,7 +220,10 @@ int main() {
             room.blackId = hostId;
             room.boardSize = boardSize;
             room.createdAt = std::chrono::steady_clock::now();
+            room.createdAtTime = std::time(nullptr);
+            room.hostAddr = req.remote_addr;
             g_rooms[code] = std::move(room);
+            printRooms();
 
             json j;
             j["room_code"] = code;
@@ -232,6 +266,8 @@ int main() {
             std::string playerId = randomId();
             room.whiteId = playerId;
             room.hasGuest = true;
+            room.guestAddr = req.remote_addr;
+            printRooms();
 
             json j;
             j["player_id"] = playerId;
@@ -276,6 +312,7 @@ int main() {
                 return;
             }
             room.started = true;
+            printRooms();
             res.set_content(R"({"ok":true})", "application/json");
         } catch (...) {
             res.status = 400;
@@ -325,6 +362,7 @@ int main() {
             if (r >= 1) {
                 room.terminated = true;
                 room.winner = played == COLOR_BLACK ? "Black" : "White";
+                printRooms();
             }
             if (r >= RESULT_OK) {
                 json m; m["x"] = x; m["y"] = y; m["z"] = z; m["is_move"] = false;
@@ -395,7 +433,7 @@ int main() {
 
             int8_t played = room.gs->current;
             int8_t r = XinQi_Shift(room.gs, fx, fy, fz, tx, ty, tz);
-            if (r >= 1) { room.terminated = true; room.winner = played == COLOR_BLACK ? "Black" : "White"; }
+            if (r >= 1) { room.terminated = true; room.winner = played == COLOR_BLACK ? "Black" : "White"; printRooms(); }
             if (r >= RESULT_OK) {
                 json m; m["x"] = fx; m["y"] = fy; m["z"] = fz;
                 m["target_x"] = tx; m["target_y"] = ty; m["target_z"] = tz; m["is_move"] = true;
