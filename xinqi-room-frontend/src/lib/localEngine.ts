@@ -131,6 +131,11 @@ export function executePlace(
     }
   }
 
+  // 无棋可走：当前玩家无合法操作则获胜
+  if (!hasAnyLegalMove(board, player, checker, vacancyOwners)) {
+    return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White" };
+  }
+
   return { legal: true, captured: captures, terminal: false };
 }
 
@@ -178,7 +183,60 @@ export function executeShift(
     }
   }
 
+  // 无棋可走
+  if (!hasAnyLegalMove(board, player, checker, vacancyOwners)) {
+    return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White" };
+  }
+
   return { legal: true, captured: captures, newVacancy, terminal: false };
+}
+
+/** 检查某方是否还有合法操作 */
+function hasAnyLegalMove(
+  board: Uint8Array,
+  player: 1 | 2,
+  checker: LegalityChecker,
+  vacancyOwners: Map<number, "Black" | "White">,
+): boolean {
+  const N = checker.N;
+  const total = N * N * N;
+  const ownVacancies = new Set<number>();
+  const ownerName = player === 1 ? "Black" : "White";
+  for (const [idx, owner] of vacancyOwners) {
+    if (owner === ownerName) ownVacancies.add(idx);
+  }
+  // 检查是否有合法落子
+  for (let i = 0; i < total; i++) {
+    if (board[i] !== 0) continue;
+    const r = checker.checkMove(board, i, player, undefined, false);
+    if (r.legal) return true;
+  }
+  // 检查是否有合法挪子（从任意内芯出发）
+  for (let i = 0; i < total; i++) {
+    if (board[i] !== player) continue;
+    if (isInnerCoreFast(board, i, N)) {
+      for (let j = 0; j < total; j++) {
+        if (board[j] !== 0) continue;
+        if (ownVacancies.has(j)) continue;
+        const r = checker.checkMoveStone(board, i, j, player, ownVacancies, undefined);
+        if (r.legal) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** 快速内芯判断 */
+function isInnerCoreFast(board: Uint8Array, idx: number, N: number): boolean {
+  const dirs: [number, number, number][] = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+  const p = to3D(idx, N);
+  for (const [dx, dy, dz] of dirs) {
+    const nx = p.x + dx, ny = p.y + dy, nz = p.z + dz;
+    if (nx < 0 || nx >= N || ny < 0 || ny >= N || nz < 0 || nz >= N) continue;
+    const ni = to1D(nx, ny, nz, N);
+    if (board[ni] !== player) return false;
+  }
+  return true;
 }
 
 /** 棋盘哈希（用于超级劫检测） */
