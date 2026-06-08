@@ -902,6 +902,31 @@
         />
       </div>
 
+      <!-- 手机版底部操作栏（剖面+回合指示） -->
+      {#if gameStarted}
+        <div class="mobile-bottom-bar" style={turnColorRgb ? `--turn-rgb:${turnColorRgb}` : ''}>
+          <!-- 回合指示（渐变条） -->
+          <div class="turn-strip"></div>
+          <!-- 剖面控制 -->
+          <div class="section-group">
+            <div class="size-buttons">
+              <button class="size-btn" class:active={sectionAxis === null} onclick={() => handleSectionChange(null, 0)}>{t("sidebar.section_all")}</button>
+              <button class="size-btn" class:active={sectionAxis === 'x'} onclick={() => handleSectionChange('x', Math.floor((N-1)/2))}>X</button>
+              <button class="size-btn" class:active={sectionAxis === 'y'} onclick={() => handleSectionChange('y', Math.floor((N-1)/2))}>Y</button>
+              <button class="size-btn" class:active={sectionAxis === 'z'} onclick={() => handleSectionChange('z', Math.floor((N-1)/2))}>Z</button>
+            </div>
+            {#if sectionAxis}
+              <div class="section-slider">
+                <span class="slider-label">{sectionAxis.toUpperCase()}:</span>
+                <input type="range" min={0} max={N-1} bind:value={sectionPos}
+                  oninput={() => handleSectionChange(sectionAxis, sectionPos)} class="slider" />
+                <span class="slider-val">{sectionPos}</span>
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
+
       <!-- 抽屉遮罩（手机） -->
       {#if drawerOpen}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -1087,8 +1112,8 @@
             </div>
           {/if}
 
-          <!-- 游戏中：剖面 -->
-          <div class="section-group">
+          <!-- 游戏中：剖面（桌面版，手机由底部栏接管） -->
+          <div class="section-group desktop-only">
             <div class="section-label">{t("sidebar.section")}</div>
             <div class="size-buttons">
               <button class="size-btn" class:active={sectionAxis === null} onclick={() => handleSectionChange(null, 0)}>{t("sidebar.section_all")}</button>
@@ -1622,8 +1647,10 @@
     background: rgba(0,0,0,0.3);
   }
   .btn-hamburger { display: none; }
+  .desktop-only { display: block; }
 
   @media (max-width: 768px) {
+    .desktop-only { display: none !important; }
     .btn-hamburger {
       display: flex; align-items: center; justify-content: center;
       all: unset; cursor: pointer; padding: 6px; margin-right: 4px;
@@ -1638,8 +1665,8 @@
       overflow-y: auto;
     }
     .sidebar.drawer-open { transform: translateX(0); }
-    .game-layout { flex-direction: column; }
-    .board-area { flex: none; height: 100vh; }
+    .game-layout { flex-direction: column; height: 100vh; }
+    .board-area { flex: none; height: calc(100vh - 56px - 48px); touch-action: none; }
     .topbar { padding: 0 10px; height: 48px; }
     .topbar-subtitle { display: none; }
     .btn-action { padding: 12px 0; min-height: 44px; font-size: 0.82rem; }
@@ -1649,9 +1676,42 @@
     .size-btn { padding: 7px 0; font-size: 0.8rem; }
     .digit-box { width: 42px; height: 46px; font-size: 1.15rem; }
     .room-code-digits { gap: 6px; }
-    .toast { bottom: 16px; padding: 8px 18px; font-size: 0.8rem; max-width: 85vw; }
+    .toast { bottom: 72px; padding: 8px 18px; font-size: 0.8rem; max-width: 85vw; }
     .slider { height: 32px; }
     .slider-val { font-size: 0.78rem; }
+  }
+
+  /* ── 手机版底部操作栏 ── */
+  .mobile-bottom-bar { display: none; }
+  @media (max-width: 768px) {
+    .mobile-bottom-bar {
+      display: flex; align-items: center; gap: 6px;
+      height: 48px; padding: 0 12px;
+      background: linear-gradient(180deg, rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.12), transparent 60%),
+                  var(--sidebar-bg);
+      border-top: 1px solid var(--border-light);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: relative; overflow: hidden;
+    }
+    .turn-strip {
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.5);
+    }
+    .mobile-bottom-bar .section-group {
+      flex: 1; display: flex; align-items: center;
+      gap: 6px; margin: 0; padding: 0;
+    }
+    .mobile-bottom-bar .size-buttons { flex-shrink: 0; }
+    .mobile-bottom-bar .size-btn {
+      padding: 4px 8px; font-size: 0.75rem; min-height: 30px;
+    }
+    .mobile-bottom-bar .section-slider {
+      flex: 1; display: flex; align-items: center; gap: 4px; margin: 0;
+    }
+    .mobile-bottom-bar .slider-label { font-size: 0.7rem; min-width: auto; }
+    .mobile-bottom-bar .slider { height: 24px; flex: 1; }
+    .mobile-bottom-bar .slider-val { font-size: 0.72rem; min-width: auto; }
   }
 
   /* ── 禁止选中（除规则文本和输入框）── */
@@ -1670,6 +1730,7 @@
   :global(canvas) {
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important; user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
     outline: none !important;
   }
 
