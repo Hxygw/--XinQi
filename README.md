@@ -95,6 +95,31 @@ XinQiServer\x64\Release\XinQiServer.exe
 # 浏览器打开 http://localhost:8090
 ```
 
+**方式三：联网对战（房间服务器）**
+
+芯棋附带独立房间服务器，支持多人在线对战。
+
+```bash
+# 编译房间服务器
+cd "D:\Program Files\VisualStudio\MSBuild\Current\Bin"
+MSBuild "path\to\XinQiRoomServer\XinQiRoomServer.vcxproj" /p:Configuration=Release /p:Platform=x64
+
+# 构建前端（xinqi-room-frontend 独立前端，含房间功能）
+cd xinqi-room-frontend
+npm install
+npm run build
+# 将 dist/ 复制到 XinQiRoomServer/x64/Release/dist/
+
+# 运行
+XinQiRoomServer\x64\Release\XinQiRoomServer.exe
+# 浏览器打开 http://localhost:8090
+
+# 通过 ngrok 分享给朋友
+ngrok http 8090
+```
+
+> 房主创建房间 → 4 位房间号 → 朋友输入房间号加入 → 准备就绪后开始对弈。支持本地 PvP（无需房间）和在线对战两种模式。
+
 ### 项目结构
 
 ```
@@ -108,16 +133,24 @@ XinQi/
 ├── XinQiServer/        # HTTP 服务器 (捆绑引擎+AI+前端)
 │   ├── src/main.cpp
 │   └── dist/           # 预构建的前端文件
+├── XinQiRoomServer/    # 房间服务器 (多人在线对战)
+│   ├── src/main.cpp
+│   └── include/        # httplib, nlohmann/json
 ├── XinQiTrain/         # 训练模块 (DLL + Python 绑定)
 │   ├── train_api.h/cpp # C 接口导出
 │   ├── xinqi_env.py    # Python ctypes 封装
 │   ├── selfplay.py     # 自对弈数据生成
 │   └── XinQiTrain.dll  # 预编译 DLL
-└── xinqi-frontend/     # 前端 (Svelte 5 + Three.js)
+├── xinqi-frontend/     # 主前端 (Svelte 5 + Three.js)
+│   └── src/
+│       ├── App.svelte
+│       ├── components/  # Board3D, GameInfo, Modal
+│       └── lib/         # api, legality, boardUtils, types, i18n, sound
+└── xinqi-room-frontend/ # 房间前端 (Svelte 5 + Three.js，含房间+本地对战)
     └── src/
         ├── App.svelte
         ├── components/  # Board3D, GameInfo, Modal
-        └── lib/         # api, legality, boardUtils, types, i18n, sound
+        └── lib/         # api, legality, boardUtils, types, i18n, sound, localEngine
 ```
 
 ### 技术栈
@@ -236,17 +269,40 @@ npm run build
 # 3. Run
 XinQiServer\x64\Release\XinQiServer.exe
 # Open http://localhost:8090
+```**Option 3: Multiplayer room server**
+
+XinQi includes a separate room server for online multiplayer matches.
+
+```bash
+# Build room server
+cd "D:\Program Files\VisualStudio\MSBuild\Current\Bin"
+MSBuild "path\to\XinQiRoomServer\XinQiRoomServer.vcxproj" /p:Configuration=Release /p:Platform=x64
+
+# Build frontend (xinqi-room-frontend includes room UI)
+cd xinqi-room-frontend
+npm install
+npm run build
+# Copy dist/ to XinQiRoomServer/x64/Release/dist/
+
+# Run
+XinQiRoomServer\x64\Release\XinQiRoomServer.exe
+# Open http://localhost:8090
+
+# Share via ngrok
+ngrok http 8090
 ```
 
-### Project Structure
+> Host creates a room → 4-digit code → friend enters code to join → both ready → game starts. Also supports local PvP (no room needed).
 
 ```
 XinQi/
 ├── XinQiCore/          # Core engine (C++20, static library)
 ├── XinQiAI/            # AI engine (pure MCTS, static library)
 ├── XinQiServer/        # HTTP server (bundles engine+AI+frontend)
+├── XinQiRoomServer/    # Room server (multiplayer online matches)
 ├── XinQiTrain/         # Training bridge (DLL + Python bindings)
-└── xinqi-frontend/     # Frontend (Svelte 5 + Three.js)
+├── xinqi-frontend/     # Main frontend (Svelte 5 + Three.js)
+└── xinqi-room-frontend/ # Room frontend (Svelte 5 + Three.js, rooms + local PvP)
 ```
 
 ### Tech Stack
