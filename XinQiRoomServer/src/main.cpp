@@ -60,23 +60,24 @@ static std::string timeStr(std::time_t t) {
 }
 
 static std::string roomStatus(const Room& room) {
-    if (room.terminated) return "终局";
-    if (room.started) return "对局中";
-    if (room.hasGuest) return "等待开局";
-    return "等待加入";
+    if (room.terminated) return "END";
+    if (room.started) return "PLAYING";
+    if (room.hasGuest) return "READY";
+    return "WAITING";
 }
 
 static void printRooms() {
     printf("\n=== 房间列表 (%zu 个) ===\n", g_rooms.size());
     for (auto& [code, room] : g_rooms) {
-        printf("  %s  [%s]  %s  房主: %s",
+        printf("  %s  [%s]  %s  Host: %s",
             code.c_str(), timeStr(room.createdAtTime).c_str(),
             roomStatus(room).c_str(), room.hostAddr.c_str());
-        if (room.hasGuest) printf("  客人: %s", room.guestAddr.c_str());
-        if (room.terminated) printf("  %s胜", room.winner.c_str());
+        if (room.hasGuest) printf("  Guest: %s", room.guestAddr.c_str());
+        if (room.terminated) printf("  %s wins", room.winner.c_str());
         printf("\n");
     }
     printf("========================\n");
+    fflush(stdout);
 }
 
 // ── 工具函数 ──
@@ -175,6 +176,7 @@ static void cleanupThread() {
 // ══════════════════════════════════════════════════════════════
 
 int main() {
+    try {
     httplib::Server svr;
 
     // ── 全局 CORS ──
@@ -599,5 +601,8 @@ int main() {
         if (room.gs) XinQi_Destroy(room.gs);
     }
     return 0;
-}
-// force recompile  
+    } catch (const std::exception& e) {
+        printf("FATAL: %s\n", e.what());
+        return 1;
+    }
+}  
