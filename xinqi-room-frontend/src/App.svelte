@@ -902,12 +902,11 @@
         />
       </div>
 
-      <!-- 手机版底部操作栏（剖面+回合指示） -->
-      {#if gameStarted}
-        <div class="mobile-bottom-bar" style={turnColorRgb ? `--turn-rgb:${turnColorRgb}` : ''}>
-          <!-- 回合指示（渐变条） -->
-          <div class="turn-strip"></div>
-          <!-- 剖面控制 -->
+      <!-- 手机版底部操作栏（始终可见） -->
+      <div class="mobile-bottom-bar" style={turnColorRgb ? `--turn-rgb:${turnColorRgb}` : ''}>
+        <div class="turn-strip"></div>
+        {#if gameStarted}
+          <!-- 游戏中：剖面控制 -->
           <div class="section-group">
             <div class="size-buttons">
               <button class="size-btn" class:active={sectionAxis === null} onclick={() => handleSectionChange(null, 0)}>{t("sidebar.section_all")}</button>
@@ -924,8 +923,20 @@
               </div>
             {/if}
           </div>
-        </div>
-      {/if}
+        {:else}
+          <!-- 未开始：棋盘大小 -->
+          <div class="section-group" style="flex-direction:row;gap:8px;padding-top:0;border:none;align-items:center;">
+            <span class="section-label" style="text-transform:none;font-size:0.75rem;">{t("sidebar.board_size")}</span>
+            <div class="size-buttons">
+              {#each [3, 4, 5, 6, 7] as s}
+                <button class="size-btn" class:active={N === s} onclick={() => changeBoardSize(s)}>
+                  {s}³
+                </button>
+              {/each}
+            </div>
+          </div>
+        {/if}
+      </div>
 
       <!-- 抽屉遮罩（手机） -->
       {#if drawerOpen}
@@ -1665,8 +1676,8 @@
       overflow-y: auto;
     }
     .sidebar.drawer-open { transform: translateX(0); }
-    .game-layout { flex-direction: column; height: 100vh; }
-    .board-area { flex: none; height: calc(100vh - 56px - 48px); touch-action: none; }
+    .game-layout { flex-direction: column; height: calc(100vh - 48px); }
+    .board-area { flex: none; height: calc(100vh - 48px - 56px); touch-action: none; }
     .topbar { padding: 0 10px; height: 48px; }
     .topbar-subtitle { display: none; }
     .btn-action { padding: 12px 0; min-height: 44px; font-size: 0.82rem; }
@@ -1685,33 +1696,33 @@
   .mobile-bottom-bar { display: none; }
   @media (max-width: 768px) {
     .mobile-bottom-bar {
-      display: flex; align-items: center; gap: 6px;
-      height: 48px; padding: 0 12px;
-      background: linear-gradient(180deg, rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.12), transparent 60%),
-                  var(--sidebar-bg);
+      display: flex; align-items: center; gap: 8px;
+      height: 56px; padding: 0 14px;
+      background: var(--sidebar-bg);
       border-top: 1px solid var(--border-light);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       position: relative; overflow: hidden;
+      flex-shrink: 0;
     }
     .turn-strip {
       position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.5);
+      background: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.4);
     }
     .mobile-bottom-bar .section-group {
       flex: 1; display: flex; align-items: center;
-      gap: 6px; margin: 0; padding: 0;
+      gap: 8px; margin: 0; padding: 0;
     }
     .mobile-bottom-bar .size-buttons { flex-shrink: 0; }
     .mobile-bottom-bar .size-btn {
-      padding: 4px 8px; font-size: 0.75rem; min-height: 30px;
+      padding: 6px 10px; font-size: 0.82rem; min-height: 34px;
     }
     .mobile-bottom-bar .section-slider {
-      flex: 1; display: flex; align-items: center; gap: 4px; margin: 0;
+      flex: 1; display: flex; align-items: center; gap: 6px; margin: 0;
     }
-    .mobile-bottom-bar .slider-label { font-size: 0.7rem; min-width: auto; }
-    .mobile-bottom-bar .slider { height: 24px; flex: 1; }
-    .mobile-bottom-bar .slider-val { font-size: 0.72rem; min-width: auto; }
+    .mobile-bottom-bar .slider-label { font-size: 0.75rem; min-width: auto; }
+    .mobile-bottom-bar .slider { height: 28px; flex: 1; }
+    .mobile-bottom-bar .slider-val { font-size: 0.78rem; min-width: auto; }
   }
 
   /* ── 禁止选中（除规则文本和输入框）── */
