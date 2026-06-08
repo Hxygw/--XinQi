@@ -175,9 +175,6 @@ static void cleanupThread() {
 // ══════════════════════════════════════════════════════════════
 
 int main() {
-    // 控制台 UTF-8 输出（解决中文乱码）
-    system("chcp 65001 > nul");
-
     httplib::Server svr;
 
     // ── 全局 CORS ──
@@ -586,8 +583,16 @@ int main() {
     cleaner.detach();
 
     int port = 8090;
-    printf("XinQi Room Server listening on http://localhost:%d\n", port);
-    svr.listen("127.0.0.1", port);
+    printf("XinQi Room Server listening on http://0.0.0.0:%d\n", port);
+    printf("Share via: ngrok http %d\n", port);
+    fflush(stdout);
+
+    try {
+        svr.listen("0.0.0.0", port);
+    } catch (const std::exception& e) {
+        printf("FATAL: %s\n", e.what());
+        return 1;
+    }
 
     // 清理
     for (auto& [_, room] : g_rooms) {
