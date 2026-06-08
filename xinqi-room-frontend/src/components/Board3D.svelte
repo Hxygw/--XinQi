@@ -231,7 +231,7 @@
 
     camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
     const center = (N - 1) / 2;
-    zoomLevel = window.innerWidth <= 768 ? 8 : 12;
+    zoomLevel = 12;
     // 相机在 X 轴上，正对棋盘中心，高度与棋盘平齐
     camera.position.set(center + zoomLevel, center, center);
     camera.lookAt(center, center, center);

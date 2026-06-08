@@ -904,7 +904,9 @@
 
       <!-- 手机版底部操作栏（始终可见） -->
       <div class="mobile-bottom-bar" style={turnColorRgb ? `--turn-rgb:${turnColorRgb}` : ''}>
-        <div class="turn-strip"></div>
+        <div class="turn-strip">
+          {gameStarted ? (currentPlayer === "Black" ? t("player.black") : t("player.white")) + " · " + t("sidebar.turn") : ""}
+        </div>
         {#if gameStarted}
           <!-- 游戏中：剖面控制 -->
           <div class="section-group">
@@ -1697,33 +1699,43 @@
   .mobile-bottom-bar { display: none; }
   @media (max-width: 768px) {
     .mobile-bottom-bar {
-      display: flex; align-items: center; gap: 8px;
-      height: 56px; padding: 0 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      height: 220px; padding: 14px 14px 10px;
       background: var(--sidebar-bg);
       border-top: 1px solid var(--border-light);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      position: relative; overflow: hidden;
+      position: relative; overflow-y: auto;
       flex-shrink: 0;
     }
     .turn-strip {
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.4);
+      flex-shrink: 0;
+      height: 48px; border-radius: 8px;
+      background: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.12);
+      border: 1px solid rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 600;
+      color: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.9);
     }
     .mobile-bottom-bar .section-group {
-      flex: 1; display: flex; align-items: center;
+      flex: 1; display: flex; flex-direction: column;
       gap: 8px; margin: 0; padding: 0;
     }
-    .mobile-bottom-bar .size-buttons { flex-shrink: 0; }
+    .mobile-bottom-bar .section-label {
+      display: block; font-size: 0.7rem;
+    }
+    .mobile-bottom-bar .size-buttons {
+      display: flex; gap: 6px; justify-content: center;
+    }
     .mobile-bottom-bar .size-btn {
-      padding: 6px 10px; font-size: 0.82rem; min-height: 34px;
+      flex: 1; padding: 8px 0; font-size: 0.85rem; min-height: 38px;
     }
     .mobile-bottom-bar .section-slider {
-      flex: 1; display: flex; align-items: center; gap: 6px; margin: 0;
+      display: flex; align-items: center; gap: 6px; margin: 0;
     }
-    .mobile-bottom-bar .slider-label { font-size: 0.75rem; min-width: auto; }
-    .mobile-bottom-bar .slider { height: 28px; flex: 1; }
-    .mobile-bottom-bar .slider-val { font-size: 0.78rem; min-width: auto; }
+    .mobile-bottom-bar .slider-label { font-size: 0.78rem; min-width: auto; }
+    .mobile-bottom-bar .slider { height: 32px; flex: 1; }
+    .mobile-bottom-bar .slider-val { font-size: 0.82rem; min-width: auto; }
   }
 
   /* ── 禁止选中（除规则文本和输入框）── */
