@@ -440,7 +440,7 @@
       const idx = to1D(pt.x, pt.y, pt.z, N);
       const result = executePlace(board, idx, player, checker, historyHashes, moveCount, vacancyOwners);
       if (result.legal) {
-        board = new Uint8Array(board); // 触发 Svelte 响应式
+        board = result.board;
         playMoveSound(result.terminal, undefined, result.captured.length > 0, false);
         historyHashes.add(boardHash(board));
         moveCount++;
@@ -505,7 +505,7 @@
       }
       const result = executeShift(board, moveSourceIdx, targetIdx, player, checker, historyHashes, ownVac, vacancyOwners);
       if (result.legal) {
-        board = new Uint8Array(board); // 触发 Svelte 响应式
+        board = result.board;
         playMoveSound(result.terminal, undefined, result.captured.length > 0, true);
         historyHashes.add(boardHash(board));
         exitMoveMode();

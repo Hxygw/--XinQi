@@ -15,6 +15,8 @@ export interface PlaceResult {
   terminal: boolean;
   winner?: "Black" | "White";
   error?: string;
+  /** 执行后的新棋盘（每次返回新对象，确保响应式） */
+  board: Uint8Array;
 }
 
 export interface ShiftResult {
@@ -24,6 +26,7 @@ export interface ShiftResult {
   terminal: boolean;
   winner?: "Black" | "White";
   error?: string;
+  board: Uint8Array;
 }
 
 /**
@@ -126,37 +129,38 @@ export function executePlace(
   const isFirst = moveCount === 0;
   const result = checker.checkMove(board, idx, player, historyHashes, isFirst);
   if (!result.legal) {
-    return { legal: false, captured: [], terminal: false, error: result.reason };
+    return { legal: false, captured: [], terminal: false, error: result.reason, board: new Uint8Array(board) };
   }
 
   const opponentName = player === 1 ? "White" : "Black";
   const wasOpponentVacancy = vacancyOwners.get(idx) === opponentName;
 
-  board[idx] = player;
+  const newBoard = new Uint8Array(board);
+  newBoard[idx] = player;
 
-  const captures = findAndCapture(board, idx, player, checker.N);
+  const captures = findAndCapture(newBoard, idx, player, checker.N);
 
   // 侵入获胜
   if (wasOpponentVacancy) {
     vacancyOwners.delete(idx);
-    return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White" };
+    return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
   }
 
   // 清台：触发吃子后对方无内芯
   if (captures.length > 0) {
-    const cores = findAllInnerCores(board, checker.N);
+    const cores = findAllInnerCores(newBoard, checker.N);
     const oppCores = player === 1 ? cores.white : cores.black;
     if (oppCores.length === 0) {
-      return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White" };
+      return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
     }
   }
 
   // 无棋可走
-  if (!hasAnyLegalMove(board, player, checker, vacancyOwners)) {
-    return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White" };
+  if (!hasAnyLegalMove(newBoard, player, checker, vacancyOwners)) {
+    return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
   }
 
-  return { legal: true, captured: captures, terminal: false };
+  return { legal: true, captured: captures, terminal: false, board: newBoard };
 }
 
 /**
@@ -174,36 +178,37 @@ export function executeShift(
 ): ShiftResult {
   const result = checker.checkMoveStone(board, sourceIdx, targetIdx, player, ownVacancies, historyHashes);
   if (!result.legal) {
-    return { legal: false, captured: [], newVacancy: -1, terminal: false, error: result.reason };
+    return { legal: false, captured: [], newVacancy: -1, terminal: false, error: result.reason, board: new Uint8Array(board) };
   }
 
   const opponentName = player === 1 ? "White" : "Black";
   const wasOpponentVacancy = vacancyOwners.get(targetIdx) === opponentName;
 
-  board[sourceIdx] = 0;
-  board[targetIdx] = player;
+  const newBoard = new Uint8Array(board);
+  newBoard[sourceIdx] = 0;
+  newBoard[targetIdx] = player;
   const newVacancy = sourceIdx;
   vacancyOwners.set(newVacancy, player === 1 ? "Black" : "White");
 
-  const captures = findAndCapture(board, targetIdx, player, checker.N);
+  const captures = findAndCapture(newBoard, targetIdx, player, checker.N);
 
   if (wasOpponentVacancy) {
-    return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White" };
+    return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
   }
 
   if (captures.length > 0) {
-    const cores = findAllInnerCores(board, checker.N);
+    const cores = findAllInnerCores(newBoard, checker.N);
     const oppCores = player === 1 ? cores.white : cores.black;
     if (oppCores.length === 0) {
-      return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White" };
+      return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
     }
   }
 
-  if (!hasAnyLegalMove(board, player, checker, vacancyOwners)) {
-    return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White" };
+  if (!hasAnyLegalMove(newBoard, player, checker, vacancyOwners)) {
+    return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White", board: newBoard };
   }
 
-  return { legal: true, captured: captures, newVacancy, terminal: false };
+  return { legal: true, captured: captures, newVacancy, terminal: false, board: newBoard };
 }
 
 /** 检查某方是否还有合法操作 */
