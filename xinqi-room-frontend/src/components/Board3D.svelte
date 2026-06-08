@@ -311,7 +311,11 @@
         if (!raycastEnabled) return;
         const idx = getIntersectIdx(e.clientX, e.clientY);
         if (idx >= 0) {
-          if (e.pointerType === "touch") {
+          const hasHover = window.matchMedia("(hover: hover)").matches;
+          if (hasHover) {
+            // 桌面：鼠标悬停已实时预览，单击直接确认
+            oncellclick?.(to3D(idx, N));
+          } else {
             // 触屏：第一下预览，第二下确认
             if (idx === pendingTapIdx) {
               oncellclick?.(to3D(idx, N));
@@ -320,13 +324,8 @@
               pendingTapIdx = idx;
               onhover?.(to3D(idx, N));
             }
-          } else {
-            // 鼠标：直接落子（hover 已实时预览）
-            if (idx !== hoveredIdx) onhover?.(to3D(idx, N));
-            oncellclick?.(to3D(idx, N));
           }
         } else {
-          // 点空白处 → 退出挪子模式
           pendingTapIdx = -1;
           oncellrightclick?.();
           onleave?.();

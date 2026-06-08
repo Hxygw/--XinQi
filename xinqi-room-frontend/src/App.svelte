@@ -107,6 +107,8 @@
 
   // 规则面板
   let showRules = $state(false);
+  // 手机版抽屉菜单
+  let drawerOpen = $state(false);
 
   // 剖面
   let sectionAxis = $state<string | null>(null);
@@ -840,6 +842,9 @@
   <!-- 顶部导航栏 -->
   <header class="topbar">
     <div class="topbar-left">
+      <button class="btn-hamburger" onclick={() => drawerOpen = !drawerOpen} aria-label="Menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <svg class="logo-icon" viewBox="0 0 32 32" fill="none">
         <path d="M16 4L28 10V22L16 28L4 22V10L16 4Z" stroke="url(#logo-grad)" stroke-width="1.5" fill="none"/>
         <path d="M16 4V16M16 16L28 22M16 16L4 22" stroke="url(#logo-grad)" stroke-width="1" opacity="0.5"/>
@@ -897,8 +902,14 @@
         />
       </div>
 
-      <!-- 侧栏卡片 -->
-      <aside class="sidebar" style={turnColorRgb ? `--turn-rgb:${turnColorRgb}` : ''}>
+      <!-- 抽屉遮罩（手机） -->
+      {#if drawerOpen}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div class="drawer-overlay" onclick={() => drawerOpen = false} onkeydown={() => {}}></div>
+      {/if}
+
+      <!-- 侧栏卡片 → 桌面始终可见，手机通过抽屉展示 -->
+      <aside class="sidebar" class:drawer-open={drawerOpen} style={turnColorRgb ? `--turn-rgb:${turnColorRgb}` : ''}>
         <GameInfo
           {moveCount}
           innerCoreBlack={innerCoreCountBlack}
@@ -1413,7 +1424,7 @@
     display: flex; width: 100%;
     height: calc(100vh - 56px);
   }
-  .board-area { flex: 1; height: 100%; min-width: 0; }
+  .board-area { flex: 1; height: 100%; min-width: 0; touch-action: none; }
 
   .sidebar {
     width: 260px; margin: 12px 12px 12px 0;
@@ -1604,23 +1615,34 @@
     outline: none;
   }
 
-  /* ── 手机响应式（≤768px） ── */
+  /* ── 手机版抽屉 ── */
+  .drawer-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.3);
+  }
+  .btn-hamburger { display: none; }
+
   @media (max-width: 768px) {
-    .game-layout { flex-direction: column; }
-    .board-area { flex: none; height: 55vh; }
+    .btn-hamburger {
+      display: flex; align-items: center; justify-content: center;
+      all: unset; cursor: pointer; padding: 6px; margin-right: 4px;
+      border-radius: 6px; color: var(--btn-lang-color);
+    }
+    .drawer-overlay { display: block; animation: fadeIn 0.2s; }
     .sidebar {
-      width: auto; margin: 0 10px 10px;
-      padding: 14px 14px 10px;
-      max-height: calc(45vh - 66px); height: auto;
-      border-radius: 14px;
-      gap: 2px;
+      position: fixed; top: 0; left: 0; z-index: 300;
+      width: 280px; height: 100vh; margin: 0; padding: 20px 18px 14px;
+      border-radius: 0 16px 16px 0; border: none;
+      transform: translateX(-100%); transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+      overflow-y: auto;
     }
-    .topbar { padding: 0 14px; height: 48px; }
+    .sidebar.drawer-open { transform: translateX(0); }
+    .game-layout { flex-direction: column; }
+    .board-area { flex: none; height: 100vh; }
+    .topbar { padding: 0 10px; height: 48px; }
     .topbar-subtitle { display: none; }
-    .btn-action {
-      padding: 12px 0; min-height: 44px;
-      font-size: 0.82rem;
-    }
+    .btn-action { padding: 12px 0; min-height: 44px; font-size: 0.82rem; }
     .btn-action + .btn-action { margin-top: 6px; }
     .section-group + .section-group { margin-top: 4px; }
     .section-label { font-size: 0.65rem; }
@@ -1631,4 +1653,16 @@
     .slider { height: 32px; }
     .slider-val { font-size: 0.78rem; }
   }
+
+  /* ── 禁止选中（除规则文本）── */
+  :global(body) {
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
+  }
+  .rules-body {
+    -webkit-user-select: text; user-select: text;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
