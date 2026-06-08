@@ -105,6 +105,8 @@
   let intersectPoints: THREE.Vector3[] = [];
   let interactSpheres: THREE.Mesh[] = [];
   let hoveredIdx = -1;
+  let pendingTapIdx = -1;        // 触屏点选：第一下预览，第二下确认
+  let dragDistance = 0;          // 本次 pointerdown 以来移动距离（判点击/拖拽）
 
   let initialized = $state(false);
   let prevN = -1;
@@ -269,17 +271,17 @@
     buildInteractionSpheres();
 
     renderer.domElement.addEventListener("pointermove", onPointerMove);
-    renderer.domElement.addEventListener("dblclick", onDblClick);
     renderer.domElement.addEventListener("pointerleave", onPointerLeave);
     renderer.domElement.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       oncellrightclick?.();
     });
-    // ── 棋盘拖拽旋转（绕自身 Y 轴 + 世界 Z 轴） ──
+    // ── 棋盘拖拽旋转（绕自身 Y 轴 + 世界 Z 轴） + 触屏点选 ──
     renderer.domElement.addEventListener("pointerdown", (e) => {
       isDragging = true;
       dragStartX = e.clientX;
       dragStartY = e.clientY;
+      dragDistance = 0;
       dragVel = 0;            // 重置惯性，拖拽从零开始
       clearTimeout(snapTimer); // 取消俯仰回正定时器
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -289,6 +291,7 @@
       if (!isDragging) return;
       const dx = e.clientX - dragStartX;
       const dy = e.clientY - dragStartY;
+      dragDistance += Math.abs(dx) + Math.abs(dy);
       dragStartX = e.clientX;
       dragStartY = e.clientY;
       // 水平拖拽 → 偏航角（绕自身 Y 轴），垂直拖拽 → 俯仰角（绕世界 Z 轴）
@@ -298,9 +301,39 @@
       applyTilt();
     });
     renderer.domElement.addEventListener("pointerup", (e) => {
+      const wasDragging = isDragging;
       isDragging = false;
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
       if (autoRotate) startSnapTimer();
+
+      // 点击检测（非拖拽时触发）
+      if (wasDragging && dragDistance < 8) {
+        if (!raycastEnabled) return;
+        const idx = getIntersectIdx(e.clientX, e.clientY);
+        if (idx >= 0) {
+          if (e.pointerType === "touch") {
+            // 触屏：第一下预览，第二下确认
+            if (idx === pendingTapIdx) {
+              oncellclick?.(to3D(idx, N));
+              pendingTapIdx = -1;
+            } else {
+              pendingTapIdx = idx;
+              onhover?.(to3D(idx, N));
+            }
+          } else {
+            // 鼠标：直接落子（hover 已实时预览）
+            if (idx !== hoveredIdx) onhover?.(to3D(idx, N));
+            oncellclick?.(to3D(idx, N));
+          }
+        } else {
+          // 点空白处 → 退出挪子模式
+          pendingTapIdx = -1;
+          oncellrightclick?.();
+          onleave?.();
+        }
+      } else {
+        pendingTapIdx = -1;
+      }
     });
     renderer.domElement.addEventListener("pointercancel", () => {
       isDragging = false;
@@ -859,19 +892,9 @@
     }
   }
 
-  function onDblClick(event: PointerEvent) {
-    if (!raycastEnabled) return;
-    const idx = getIntersectIdx(event.clientX, event.clientY);
-    if (idx >= 0) {
-      oncellclick?.(to3D(idx, N));
-    } else {
-      // 双击空白处 → 退出挪子模式
-      oncellrightclick?.();
-    }
-  }
-
   function onPointerLeave() {
     hoveredIdx = -1;
+    pendingTapIdx = -1;
     renderer.domElement.style.cursor = "default";
     onleave?.();
     renderer.domElement.dispatchEvent(new PointerEvent('pointerup', {

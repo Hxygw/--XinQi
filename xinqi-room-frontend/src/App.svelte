@@ -1603,4 +1603,32 @@
     border-color: var(--accent);
     outline: none;
   }
+
+  /* ── 手机响应式（≤768px） ── */
+  @media (max-width: 768px) {
+    .game-layout { flex-direction: column; }
+    .board-area { flex: none; height: 55vh; }
+    .sidebar {
+      width: auto; margin: 0 10px 10px;
+      padding: 14px 14px 10px;
+      max-height: calc(45vh - 66px); height: auto;
+      border-radius: 14px;
+      gap: 2px;
+    }
+    .topbar { padding: 0 14px; height: 48px; }
+    .topbar-subtitle { display: none; }
+    .btn-action {
+      padding: 12px 0; min-height: 44px;
+      font-size: 0.82rem;
+    }
+    .btn-action + .btn-action { margin-top: 6px; }
+    .section-group + .section-group { margin-top: 4px; }
+    .section-label { font-size: 0.65rem; }
+    .size-btn { padding: 7px 0; font-size: 0.8rem; }
+    .digit-box { width: 42px; height: 46px; font-size: 1.15rem; }
+    .room-code-digits { gap: 6px; }
+    .toast { bottom: 16px; padding: 8px 18px; font-size: 0.8rem; max-width: 85vw; }
+    .slider { height: 32px; }
+    .slider-val { font-size: 0.78rem; }
+  }
 </style>
