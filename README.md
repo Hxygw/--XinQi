@@ -137,6 +137,8 @@ XinQi/
 
 **当前状态：训练管线骨架已搭建好，等待社区贡献真正的 AI。**
 
+> 详细的 API 文档和训练指南见 [`TRAINING.md`](TRAINING.md)。
+
 ```
 Python 侧可用功能：
 ├── XinQiEnv(board_size)     ← 创建棋盘环境
@@ -263,6 +265,8 @@ XinQi/
 XinQi ships with a complete AI training scaffolding, enabling AlphaZero-style training on a 5×5×5 board.
 
 **Current state: The training pipeline skeleton is ready. The real AI is waiting for the community.**
+
+> Full API docs and training guide: [`TRAINING.md`](TRAINING.md).
 
 ```
 Python API overview:
