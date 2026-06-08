@@ -1,0 +1,26 @@
+>	XinQiRoomServer.exe!strlen() 行 76	未知
+ 	[外部代码]	
+ 	XinQiRoomServer.exe!main::__l3::<lambda_8>::operator()(const httplib::Request & req, httplib::Response & res) 行 542	C++
+ 	[外部代码]	
+ 	XinQiRoomServer.exe!httplib::Server::dispatch_request(httplib::Request & req, httplib::Response & res, const std::vector<std::pair<std::unique_ptr<httplib::detail::MatcherBase,std::default_delete<httplib::detail::MatcherBase>>,std::function<void __cdecl(httplib::Request const &,httplib::Response &)>>,std::allocator<std::pair<std::unique_ptr<httplib::detail::MatcherBase,std::default_delete<httplib::detail::MatcherBase>>,std::function<void __cdecl(httplib::Request const &,httplib::Response &)>>>> & handlers) 行 11990	C++
+ 	XinQiRoomServer.exe!httplib::Server::routing(httplib::Request & req, httplib::Response & res, httplib::Stream & strm) 行 11963	C++
+ 	XinQiRoomServer.exe!httplib::Server::process_request(httplib::Stream & strm, const std::string & remote_addr, int remote_port, const std::string & local_addr, int local_port, bool close_connection, bool & connection_closed, const std::function<void __cdecl(httplib::Request &)> & setup_request, bool * websocket_upgraded) 行 12349	C++
+ 	XinQiRoomServer.exe!httplib::Server::process_and_close_socket::__l2::<lambda_1>::operator()(httplib::Stream & strm, bool close_connection, bool & connection_closed) 行 12451	C++
+ 	XinQiRoomServer.exe!httplib::detail::process_server_socket::__l2::<lambda_1>::operator()(bool close_connection, bool & connection_closed) 行 5685	C++
+ 	XinQiRoomServer.exe!httplib::detail::process_server_socket_core<`httplib::detail::process_server_socket<`httplib::Server::process_and_close_socket'::`2'::<lambda_1>>'::`2'::<lambda_1>>(const std::atomic<unsigned __int64> & svr_sock, unsigned __int64 sock, unsigned __int64 keep_alive_max_count, __int64 keep_alive_timeout_sec, httplib::detail::process_server_socket::__l2::<lambda_1> callback) 行 5666	C++
+ 	XinQiRoomServer.exe!httplib::detail::process_server_socket<`httplib::Server::process_and_close_socket'::`2'::<lambda_1>>(const std::atomic<unsigned __int64> & svr_sock, unsigned __int64 sock, unsigned __int64 keep_alive_max_count, __int64 keep_alive_timeout_sec, __int64 read_timeout_sec, __int64 read_timeout_usec, __int64 write_timeout_sec, __int64 write_timeout_usec, httplib::Server::process_and_close_socket::__l2::<lambda_1> callback) 行 5687	C++
+ 	XinQiRoomServer.exe!httplib::Server::process_and_close_socket(unsigned __int64 sock) 行 12446	C++
+ 	XinQiRoomServer.exe!httplib::Server::listen_internal::__l1::<lambda_2>::operator()() 行 11865	C++
+ 	[外部代码]	
+ 	XinQiRoomServer.exe!httplib::ThreadPool::worker(bool is_dynamic) 行 10235	C++
+ 	XinQiRoomServer.exe!httplib::ThreadPool::{ctor}::__l8::<lambda_1>::operator()() 行 10117	C++
+ 	[外部代码]	
+ 	XinQiRoomServer.exe!thread_start<unsigned int (__cdecl*)(void *),1>(void * const parameter) 行 97	C++
+ 	[外部代码]	
++		code	"5719"	std::string
++		it	("5719", {gs=0x0000000000000000 <NULL> terminated=false winner="None" ...})	std::_Tree_iterator<std::_Tree_val<std::_Tree_simple_types<std::pair<std::string const ,Room>>>>
++		j	{m_data={m_type=object (1 '\x1') m_value={object=0x000001ebd04259a0 {...} array=0x000001ebd04259a0 {...} ...} } }	nlohmann::json_abi_v3_12_0::basic_json<std::map,std::vector,std::string,bool,__int64,unsigned __int64,double,std::allocator,nlohmann::json_abi_v3_12_0::adl_serializer,std::vector<unsigned char,std::allocator<unsigned char>>,void>
++		lock	0x00007ff7ab1ce060 {XinQiRoomServer.exe!std::mutex g_roomsMutex} locked	std::lock_guard<std::mutex>
++		req	{method="GET" path="/api/room/5719/info" matched_route="/api/room/(\\d+)/info" ...}	const httplib::Request &
++		res	{version="HTTP/1.1" status=-1 reason="" ...}	httplib::Response &
++		room	{gs=0x0000000000000000 <NULL> terminated=false winner="None" ...}	Room &

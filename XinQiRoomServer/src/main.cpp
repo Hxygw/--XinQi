@@ -539,7 +539,7 @@ int main() {
         json j;
         j["board_size"] = room.boardSize;
         j["has_guest"] = room.hasGuest;
-        j["guest_id"] = room.hasGuest ? room.whiteId : nullptr;
+        if (room.hasGuest) j["guest_id"] = room.whiteId;
         j["host_id"] = room.hostId;
         j["started"] = room.started;
         j["terminated"] = room.terminated;
