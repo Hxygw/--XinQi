@@ -14,7 +14,7 @@
   } from "./lib/boardUtils";
   import { t, setLang, getLang } from "./lib/i18n.svelte";
   import type { Lang } from "./lib/i18n.svelte";
-  import { playPlace, playShift, playCapture } from "./lib/sound";
+  import { playPlace, playShift, playCapture, playVictoryIntrusion, playVictoryAnnihilation } from "./lib/sound";
 
   // ─ 游戏状态 ──
   let status = $state("loading");
@@ -227,7 +227,7 @@
     try {
       const result = await apiClient.play(pt.x, pt.y, pt.z);
       if (result.legal) {
-        if (result.captured_count > 0) playCapture(); else playPlace();
+        playMoveSound(result.terminal, result.result_code, result.captured_count > 0, false);
         await syncState();
         if (result.terminal) showNotification(t("notif.game_over"), 3000);
         else if (!terminal && isAITurn()) { await new Promise(r => setTimeout(r, 300)); doAIMove(); }
@@ -248,7 +248,7 @@
     try {
       const result = await apiClient.moveStone(src.x, src.y, src.z, pt.x, pt.y, pt.z);
       if (result.legal) {
-        if (result.captured_count > 0) playCapture(); else playShift();
+        playMoveSound(result.terminal, result.result_code, result.captured_count > 0, true);
         await syncState();
         exitMoveMode();
         if (result.terminal) showNotification(t("notif.game_over"), 3000);
@@ -498,12 +498,23 @@
     applyBrowseStep(Math.max(0, Math.min(step, replaySteps.length - 1)));
   }
 
+  /** 音效优先级：终局 > 提子 > 落子/挪子 */
+  function playMoveSound(terminal: boolean, resultCode: number | undefined, captured: boolean, isShift: boolean) {
+    if (terminal) {
+      // WIN_CORE_INVASION=2 → 侵入音效；WIN_CLEAR_BOARD=1 / WIN_NO_LEGAL_MOVE=3 → 碾压音效
+      if (resultCode === 2) playVictoryIntrusion(); else playVictoryAnnihilation();
+    } else if (captured) playCapture();
+    else if (isShift) playShift(); else playPlace();
+  }
+
   function browseNext() {
     if (!replaySteps || browseStep >= replaySteps.length - 1) return;
     const newStep = browseStep + 1;
     const s = replaySteps[newStep];
-    if (s.last_move_is_move) playShift(); else playPlace();
+    const isLast = newStep >= replaySteps.length - 1;
+    const hasWinner = currentRecord && currentRecord.winner !== "None";
     // 检测提子：比较两步间对方棋子数量
+    let captured = false;
     const prev = replaySteps[browseStep];
     if (prev && s.board && prev.board) {
       const enemyColor = s.current_player === "Black" ? 1 : 2;
@@ -512,8 +523,12 @@
         if (prev.board[i] === enemyColor) before++;
         if (s.board[i] === enemyColor) after++;
       }
-      if (after < before) playCapture();
+      captured = after < before;
     }
+    // 音效优先级：终局 > 提子 > 落子/挪子
+    if (isLast && hasWinner) playVictoryIntrusion();
+    else if (captured) playCapture();
+    else if (s.last_move_is_move) playShift(); else playPlace();
     applyBrowseStep(newStep);
   }
 
@@ -556,8 +571,7 @@
         ? await apiClient.play(r.x, r.y, r.z)
         : await apiClient.moveStone(r.x, r.y, r.z, r.target_x!, r.target_y!, r.target_z!);
       if (pr?.legal) {
-        if (pr.captured_count > 0) playCapture();
-        else if (r.type === 0) playPlace(); else playShift();
+        playMoveSound(!!pr.terminal, pr.result_code, (pr.captured_count ?? 0) > 0, r.type !== 0);
         await syncState();
         showNotification(`AI (${currentPlayer === "Black" ? t("player.black_short") : t("player.white_short")})`, 1500);
         if (!terminal && gameMode === "ai_both" && !aiStepMode) {

@@ -37,6 +37,7 @@ export interface PlayResponse {
   next_player: "Black" | "White";
   terminal: boolean;
   winner?: "Black" | "White" | "Draw";
+  result_code?: number;
   error?: string;
 }
 

@@ -139,6 +139,7 @@ static json resultToJson(int8_t r, GameState* gs, int8_t x, int8_t y, int8_t z)
     if (r >= 1) {
         j["legal"] = true;
         j["terminal"] = true;
+        j["result_code"] = r;
         // gs->current 是败方（Place/Shift 已切为 Opp(winner)）
         j["winner"] = (gs->current == COLOR_BLACK) ? "White" : "Black";
         j["next_player"] = (gs->current == COLOR_BLACK) ? "Black" : "White";
@@ -146,6 +147,7 @@ static json resultToJson(int8_t r, GameState* gs, int8_t x, int8_t y, int8_t z)
         j["captured_count"] = gs->lastCaptureCount;
     } else if (r == RESULT_OK) {
         j["legal"] = true;
+        j["result_code"] = 0;
         j["terminal"] = !XinQi_HasAnyLegalMove(gs);
         j["next_player"] = (gs->current == COLOR_BLACK) ? "Black" : "White";
         j["captured"] = json::array();
