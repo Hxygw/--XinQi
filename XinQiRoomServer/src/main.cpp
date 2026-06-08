@@ -175,6 +175,9 @@ static void cleanupThread() {
 // ══════════════════════════════════════════════════════════════
 
 int main() {
+    // 控制台 UTF-8 输出（解决中文乱码）
+    system("chcp 65001 > nul");
+
     httplib::Server svr;
 
     // ── 全局 CORS ──
