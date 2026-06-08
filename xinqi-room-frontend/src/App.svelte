@@ -902,11 +902,9 @@
         />
       </div>
 
-      <!-- 手机版底部操作栏（始终可见） -->
+      <!-- 手机版底部操作栏 -->
       <div class="mobile-bottom-bar" style={turnColorRgb ? `--turn-rgb:${turnColorRgb}` : ''}>
-        <div class="turn-strip">
-          {gameStarted ? (currentPlayer === "Black" ? t("player.black") : t("player.white")) + " · " + t("sidebar.turn") : ""}
-        </div>
+        <div class="turn-strip"></div>
         {#if gameStarted}
           <!-- 游戏中：剖面控制 -->
           <div class="section-group">
@@ -927,7 +925,7 @@
           </div>
         {:else}
           <!-- 未开始：棋盘大小 -->
-          <div class="section-group" style="flex-direction:row;gap:8px;padding-top:0;border:none;align-items:center;">
+          <div class="section-group" style="flex-direction:row;gap:8px;padding-top:0;border:none;align-items:center;justify-content:center;">
             <span class="section-label" style="text-transform:none;font-size:0.75rem;">{t("sidebar.board_size")}</span>
             <div class="size-buttons">
               {#each [3, 4, 5, 6, 7] as s}
@@ -1699,8 +1697,8 @@
   .mobile-bottom-bar { display: none; }
   @media (max-width: 768px) {
     .mobile-bottom-bar {
-      display: flex; flex-direction: column; gap: 10px;
-      height: 220px; padding: 14px 14px 10px;
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 20px);
       background: var(--sidebar-bg);
       border-top: 1px solid var(--border-light);
       backdrop-filter: blur(20px);
@@ -1709,24 +1707,17 @@
       flex-shrink: 0;
     }
     .turn-strip {
-      flex-shrink: 0;
-      height: 48px; border-radius: 8px;
-      background: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.12);
-      border: 1px solid rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem; font-weight: 600;
-      color: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.9);
+      flex-shrink: 0; height: 3px; border-radius: 2px;
+      background: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.35);
     }
     .mobile-bottom-bar .section-group {
-      flex: 1; display: flex; flex-direction: column;
+      display: flex; flex-direction: column;
       gap: 8px; margin: 0; padding: 0;
     }
     .mobile-bottom-bar .section-label {
       display: block; font-size: 0.7rem;
     }
-    .mobile-bottom-bar .size-buttons {
-      display: flex; gap: 6px; justify-content: center;
-    }
+    .mobile-bottom-bar .size-buttons { display: flex; gap: 6px; justify-content: center; }
     .mobile-bottom-bar .size-btn {
       flex: 1; padding: 8px 0; font-size: 0.85rem; min-height: 38px;
     }
