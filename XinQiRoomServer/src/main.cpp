@@ -48,6 +48,7 @@ struct Room {
     int boardSize = 5;
     std::chrono::steady_clock::time_point createdAt;
     std::time_t createdAtTime = 0;  // 可读时间
+    std::chrono::steady_clock::time_point lastActivity;
     bool hasGuest = false;    // 是否有客人加入
     bool guestReady = false;  // 客人是否已准备
 };
@@ -157,16 +158,30 @@ static json stateToJson(const Room& room) {
     return j;
 }
 
+// ── 活动时间戳 ──
+static void touchRoom(Room& room) {
+    room.lastActivity = std::chrono::steady_clock::now();
+}
+
 // ── 清理过期房间线程 ──
 static void cleanupThread() {
     while (true) {
-        std::this_thread::sleep_for(std::chrono::minutes(30));
+        std::this_thread::sleep_for(std::chrono::minutes(1));
         std::lock_guard<std::mutex> lock(g_roomsMutex);
         auto now = std::chrono::steady_clock::now();
         for (auto it = g_rooms.begin(); it != g_rooms.end(); ) {
+            bool remove = false;
+            // 24 小时无活动的房间
             auto age = std::chrono::duration_cast<std::chrono::hours>(now - it->second.createdAt).count();
-            if (age >= 24) {
+            if (age >= 24) remove = true;
+            // 5 分钟无活动的房间（房主可能已关闭浏览器）
+            if (it->second.lastActivity.time_since_epoch().count() > 0) {
+                auto idle = std::chrono::duration_cast<std::chrono::minutes>(now - it->second.lastActivity).count();
+                if (idle >= 5) remove = true;
+            }
+            if (remove) {
                 if (it->second.gs) XinQi_Destroy(it->second.gs);
+                printf("Cleanup room %s\n", it->first.c_str());
                 it = g_rooms.erase(it);
             } else {
                 ++it;
@@ -237,6 +252,7 @@ int main() {
             room.createdAt = std::chrono::steady_clock::now();
             room.createdAtTime = std::time(nullptr);
             room.hostAddr = req.remote_addr;
+            touchRoom(room);
             g_rooms[code] = std::move(room);
             printRooms();
 
