@@ -12,7 +12,7 @@ type Translations = Record<string, Record<Lang, string>>;
 
 const dict: Translations = {
   // 标题
-  "app.title": { zh: "芯棋 房间", en: "XinQi Room" },
+  "app.title": { zh: "芯棋", en: "XinQi" },
   "app.subtitle": { zh: "网络对弈", en: "Online Play" },
 
   // 语言切换
