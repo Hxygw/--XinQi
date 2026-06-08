@@ -1306,6 +1306,7 @@
   }
   .room-code-input {
     all: unset;
+    box-sizing: border-box;
     width: 100%; padding: 10px 12px;
     border-radius: 8px;
     font-size: 0.9rem;
