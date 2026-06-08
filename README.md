@@ -16,6 +16,7 @@
   <img src="https://img.shields.io/badge/Svelte-5-orange" alt="Svelte 5">
   <img src="https://img.shields.io/badge/Three.js-r174-green" alt="Three.js">
   <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="Platform">
+  <img src="https://img.shields.io/badge/mobile-friendly-%2344cc11" alt="Mobile Friendly">
 </p>
 
 <br>
@@ -119,6 +120,7 @@ ngrok http 8090
 ```
 
 > 房主创建房间 → 4 位房间号 → 朋友输入房间号加入 → 准备就绪后开始对弈。支持本地 PvP（无需房间）和在线对战两种模式。
+> 手机浏览器同样支持，同一局域网或通过 ngrok 分享均可直接访问。触屏操作：首次点击预览合法性，再次同一格确认落子。
 
 ### 项目结构
 
@@ -293,6 +295,7 @@ ngrok http 8090
 ```
 
 > Host creates a room → 4-digit code → friend enters code to join → both ready → game starts. Also supports local PvP (no room needed).
+> Mobile browser friendly — access via LAN or ngrok. Touch controls: first tap previews legality, second tap on the same cell confirms the move.
 
 ```
 XinQi/
