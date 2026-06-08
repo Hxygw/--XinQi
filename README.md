@@ -73,7 +73,7 @@
 
 从 [Releases](https://github.com/Hxygw/--XinQi/releases) 下载最新版 `XinQiServer-v0.1.0.zip`，解压后双击 `XinQiServer.exe`，浏览器打开 `http://localhost:8090`。
 
-> 内置两盘示例棋谱（**清台-20手**、**清台-76手**），打开游戏后点击 **浏览棋谱** 即可观看回放。
+> 内置两盘示例棋谱（**清台-20手**、**侵入-76手**），打开游戏后点击 **浏览棋谱** 即可观看回放。
 
 **方式二：从源码构建**
 
@@ -214,7 +214,7 @@ The board is an **N×N×N 3D lattice** (default 5×5×5 = 125 cells). Black and 
 
 Download `XinQiServer-v0.1.0.zip` from [Releases](https://github.com/Hxygw/--XinQi/releases), unzip, double-click `XinQiServer.exe`, and open `http://localhost:8090` in your browser.
 
-> Two sample games are included (**清台-20手**, **清台-76手**). Click **Browse Records** after launching to watch the replays.
+> Two sample games are included (**清台-20手**, **侵入-76手**). Click **Browse Records** after launching to watch the replays.
 
 **Option 2: Build from source**
 
