@@ -211,7 +211,12 @@ int main() {
 
             std::string hostId = randomId();
             Room room;
-            room.gs = nullptr;  // 开局时才创建
+            room.gs = XinQi_Create((int8_t)boardSize);
+            if (!room.gs) {
+                res.status = 500;
+                res.set_content(R"({"error":"create failed"})", "application/json");
+                return;
+            }
             room.hostId = hostId;
             room.blackId = hostId;
             room.boardSize = boardSize;
@@ -289,6 +294,10 @@ int main() {
             Room& room = it->second;
             if (room.started) { res.status = 400; res.set_content(R"({"error":"already started"})", "application/json"); return; }
             if (boardSize < 3 || boardSize > MAX_BOARD_SIZE) { res.status = 400; res.set_content(R"({"error":"invalid size"})", "application/json"); return; }
+            // 销毁旧 GameState，创建新棋盘的
+            if (room.gs) XinQi_Destroy(room.gs);
+            room.gs = XinQi_Create((int8_t)boardSize);
+            if (!room.gs) { res.status = 500; res.set_content(R"({"error":"recreate failed"})", "application/json"); return; }
             room.boardSize = boardSize;
             res.set_content(R"({"ok":true})", "application/json");
         } catch (...) { res.status = 400; res.set_content(R"({"error":"invalid"})", "application/json"); }
@@ -325,13 +334,16 @@ int main() {
                 return;
             }
             // 允许房主在开局前修改棋盘大小
-            room.boardSize = body.value("board_size", room.boardSize);
-            // 创建游戏状态
-            room.gs = XinQi_Create((int8_t)room.boardSize);
+            int newSize = body.value("board_size", room.boardSize);
+            if (newSize != room.boardSize) {
+                if (room.gs) XinQi_Destroy(room.gs);
+                room.gs = XinQi_Create((int8_t)newSize);
+                if (!room.gs) { res.status = 500; res.set_content(R"({"error":"create failed"})", "application/json"); return; }
+                room.boardSize = newSize;
+            }
             if (!room.gs) {
-                res.status = 500;
-                res.set_content(R"({"error":"create failed"})", "application/json");
-                return;
+                room.gs = XinQi_Create((int8_t)room.boardSize);
+                if (!room.gs) { res.status = 500; res.set_content(R"({"error":"create failed"})", "application/json"); return; }
             }
             room.started = true;
             printRooms();
@@ -502,11 +514,7 @@ int main() {
             return;
         }
         Room& room = it->second;
-        if (!room.gs) {
-            json j; j["started"] = false; j["board_size"] = room.boardSize;
-            res.set_content(j.dump(), "application/json");
-            return;
-        }
+        if (!room.gs) { res.status = 500; res.set_content(R"({"error":"null state"})", "application/json"); return; }
         res.set_content(stateToJson(it->second).dump(), "application/json");
     });
 
