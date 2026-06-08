@@ -116,14 +116,14 @@ export function playVictoryAnnihilation() {
   const ctx = getCtx();
   const t = ctx.currentTime;
 
-  // 低音和弦 C3-E3-G3-C4
+  // 低音和弦 C3-E3-G3-C4 — 像巨钟齐鸣
   [130.81, 164.81, 196.00, 261.63].forEach((f, i) => {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = 'sine';
     osc.frequency.value = f;
     g.gain.setValueAtTime(0, t + i * 0.2);
-    g.gain.linearRampToValueAtTime(0.25, t + i * 0.2 + 0.8);
+    g.gain.linearRampToValueAtTime(0.4, t + i * 0.2 + 0.8);
     g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.2 + 2.5);
     osc.connect(g);
     g.connect(ctx.destination);
@@ -138,7 +138,7 @@ export function playVictoryAnnihilation() {
   sub.frequency.setValueAtTime(65.41, t);
   sub.frequency.exponentialRampToValueAtTime(32.70, t + 2);
   subG.gain.setValueAtTime(0, t);
-  subG.gain.linearRampToValueAtTime(0.3, t + 0.5);
+  subG.gain.linearRampToValueAtTime(0.5, t + 0.5);
   subG.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
   sub.connect(subG);
   subG.connect(ctx.destination);
