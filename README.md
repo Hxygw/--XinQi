@@ -73,6 +73,8 @@
 
 从 [Releases](https://github.com/Hxygw/--XinQi/releases) 下载最新版 `XinQiServer-v0.1.0.zip`，解压后双击 `XinQiServer.exe`，浏览器打开 `http://localhost:8090`。
 
+> 内置一盘 76 手的示例棋谱，打开游戏后点击 **浏览棋谱** 即可观看回放。
+
 **方式二：从源码构建**
 
 需要 Visual Studio 2022 (v145) + Node.js 18+。
@@ -211,6 +213,8 @@ The board is an **N×N×N 3D lattice** (default 5×5×5 = 125 cells). Black and 
 **Option 1: Download pre-built binary**
 
 Download `XinQiServer-v0.1.0.zip` from [Releases](https://github.com/Hxygw/--XinQi/releases), unzip, double-click `XinQiServer.exe`, and open `http://localhost:8090` in your browser.
+
+> A 76-move sample game is included. Click **Browse Records** after launching to watch the replay.
 
 **Option 2: Build from source**
 
