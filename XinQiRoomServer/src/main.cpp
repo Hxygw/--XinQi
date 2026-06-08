@@ -185,9 +185,12 @@ int main() {
     });
 
     // ── CORS 预检 ──
-    svr.Options(R"(/.*)", [](const httplib::Request&, httplib::Response& res) {
-        res.status = 200;
-        res.set_content("", "text/plain");
+    svr.set_pre_routing_handler([](const httplib::Request& req, httplib::Response& res) {
+        if (req.method == "OPTIONS") {
+            res.status = 200;
+            return httplib::Server::HandlerResponse::Handled;
+        }
+        return httplib::Server::HandlerResponse::Unhandled;
     });
 
     // ── POST /api/room/create ──
