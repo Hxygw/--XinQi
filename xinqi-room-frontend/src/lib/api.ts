@@ -33,12 +33,13 @@ export interface JoinRoomResponse {
 }
 
 export interface RoomInfoResponse {
-  room_code: string;
-  host_id: string;
-  guest_id: string | null;
   board_size: number;
+  has_guest: boolean;
+  host_id: string;
   started: boolean;
-  finished: boolean;
+  terminated: boolean;
+  winner?: string;
+  guest_id?: string;
 }
 
 export const roomClient = {
@@ -58,11 +59,19 @@ export const roomClient = {
     });
   },
 
+  /** 设置棋盘大小（房主，开局前） */
+  setSize(code: string, boardSize: number): Promise<{ ok: boolean }> {
+    return req(`/api/room/${code}/set_size`, {
+      method: "POST",
+      body: JSON.stringify({ board_size: boardSize }),
+    });
+  },
+
   /** 开始游戏（房主发起） */
-  startGame(code: string, playerId: string): Promise<{ success: boolean }> {
+  startGame(code: string, playerId: string, boardSize?: number): Promise<{ ok: boolean }> {
     return req(`/api/room/${code}/start`, {
       method: "POST",
-      body: JSON.stringify({ player_id: playerId }),
+      body: JSON.stringify({ player_id: playerId, board_size: boardSize }),
     });
   },
 

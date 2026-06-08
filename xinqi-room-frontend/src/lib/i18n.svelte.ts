@@ -53,6 +53,7 @@ const dict: Translations = {
   "room.enter_code": { zh: "输入房间号", en: "Enter room code" },
   "room.host": { zh: "房主", en: "Host" },
   "room.guest": { zh: "客人", en: "Guest" },
+  "room.joined": { zh: "已加入", en: "joined" },
 
   // 玩家
   "player.black": { zh: "黑方", en: "Black" },

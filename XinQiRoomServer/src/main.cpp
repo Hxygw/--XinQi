@@ -209,16 +209,9 @@ int main() {
             std::string code;
             do { code = randomCode(); } while (g_rooms.count(code));
 
-            GameState* gs = XinQi_Create((int8_t)boardSize);
-            if (!gs) {
-                res.status = 500;
-                res.set_content(R"({"error":"create failed"})", "application/json");
-                return;
-            }
-
             std::string hostId = randomId();
             Room room;
-            room.gs = gs;
+            room.gs = nullptr;  // 开局时才创建
             room.hostId = hostId;
             room.blackId = hostId;
             room.boardSize = boardSize;
@@ -284,6 +277,23 @@ int main() {
         }
     });
 
+    // ── POST /api/room/:code/set_size ──
+    svr.Post(R"(/api/room/(\d+)/set_size)", [](const httplib::Request& req, httplib::Response& res) {
+        try {
+            std::string code = req.matches[1];
+            auto body = json::parse(req.body);
+            int boardSize = body.value("board_size", 5);
+            std::lock_guard<std::mutex> lock(g_roomsMutex);
+            auto it = g_rooms.find(code);
+            if (it == g_rooms.end()) { res.status = 404; res.set_content(R"({"error":"not found"})", "application/json"); return; }
+            Room& room = it->second;
+            if (room.started) { res.status = 400; res.set_content(R"({"error":"already started"})", "application/json"); return; }
+            if (boardSize < 3 || boardSize > MAX_BOARD_SIZE) { res.status = 400; res.set_content(R"({"error":"invalid size"})", "application/json"); return; }
+            room.boardSize = boardSize;
+            res.set_content(R"({"ok":true})", "application/json");
+        } catch (...) { res.status = 400; res.set_content(R"({"error":"invalid"})", "application/json"); }
+    });
+
     // ── POST /api/room/:code/start ──
     svr.Post(R"(/api/room/(\d+)/start)", [](const httplib::Request& req, httplib::Response& res) {
         try {
@@ -312,6 +322,15 @@ int main() {
             if (!room.hasGuest) {
                 res.status = 400;
                 res.set_content(R"({"error":"waiting for opponent"})", "application/json");
+                return;
+            }
+            // 允许房主在开局前修改棋盘大小
+            room.boardSize = body.value("board_size", room.boardSize);
+            // 创建游戏状态
+            room.gs = XinQi_Create((int8_t)room.boardSize);
+            if (!room.gs) {
+                res.status = 500;
+                res.set_content(R"({"error":"create failed"})", "application/json");
                 return;
             }
             room.started = true;
@@ -476,6 +495,12 @@ int main() {
             res.set_content(R"({"error":"room not found"})", "application/json");
             return;
         }
+        Room& room = it->second;
+        if (!room.gs) {
+            json j; j["started"] = false; j["board_size"] = room.boardSize;
+            res.set_content(j.dump(), "application/json");
+            return;
+        }
         res.set_content(stateToJson(it->second).dump(), "application/json");
     });
 
@@ -493,6 +518,8 @@ int main() {
         json j;
         j["board_size"] = room.boardSize;
         j["has_guest"] = room.hasGuest;
+        j["guest_id"] = room.hasGuest ? room.whiteId : nullptr;
+        j["host_id"] = room.hostId;
         j["started"] = room.started;
         j["terminated"] = room.terminated;
         if (room.terminated) j["winner"] = room.winner;

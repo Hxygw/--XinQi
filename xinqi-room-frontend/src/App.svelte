@@ -232,9 +232,8 @@
 
   async function handleHostStartGame() {
     try {
-      await roomClient.startGame(roomCode, playerId);
+      await roomClient.startGame(roomCode, playerId, N);
       waitingOpponent = false;
-      // 等待轮询到 started=true 后切换
     } catch (e) {
       showNotification(`${t("error.operation_failed")}: ${(e as Error).message}`, 5000);
     }
@@ -275,8 +274,7 @@
 
     try {
       const info = await roomClient.getInfo(roomCode);
-      if (!info.started && info.guest_id && roomMode === "host") {
-        // 客人已加入，房主可开始游戏
+      if (!info.started && info.has_guest && roomMode === "host") {
         waitingOpponent = false;
       }
       if (info.started && !gameStarted) {
@@ -755,6 +753,17 @@
               <p>{t("room.waiting_opponent")}</p>
               <div class="room-code-display">{roomCode}</div>
             </div>
+            <!-- 房主在等待时可调棋盘大小 -->
+            <div class="section-group">
+              <div class="section-label">{t("sidebar.board_size")}</div>
+              <div class="size-buttons">
+                {#each [3, 4, 5, 6, 7] as s}
+                  <button class="size-btn" class:active={N === s} onclick={async () => { N = s; checker.reinit(N); try { await roomClient.setSize(roomCode, s); } catch {} }}>
+                    {s}³{#if N === s}<svg class="check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{/if}
+                  </button>
+                {/each}
+              </div>
+            </div>
             <button class="btn-action primary" onclick={handleHostStartGame} disabled>
               {t("room.start_game")}
             </button>
@@ -765,7 +774,17 @@
 
           {#if roomMode === "host" && !waitingOpponent && !gameStarted}
             <div class="room-status">
-              <p>{t("room.guest")} 已加入！</p>
+              <p>{t("room.guest")} {t("room.joined")}</p>
+            </div>
+            <div class="section-group">
+              <div class="section-label">{t("sidebar.board_size")}</div>
+              <div class="size-buttons">
+                {#each [3, 4, 5, 6, 7] as s}
+                  <button class="size-btn" class:active={N === s} onclick={async () => { N = s; checker.reinit(N); try { await roomClient.setSize(roomCode, s); } catch {} }}>
+                    {s}³{#if N === s}<svg class="check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{/if}
+                  </button>
+                {/each}
+              </div>
             </div>
             <button class="btn-action primary" onclick={handleHostStartGame}>
               {t("room.start_game")}
