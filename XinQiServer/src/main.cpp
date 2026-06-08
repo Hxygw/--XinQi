@@ -560,6 +560,13 @@ int main()
         res.set_content(j.dump(), "application/json");
     });
 
+    // ── 全局 CORS 头（所有响应） ──
+    svr.set_default_headers({
+        {"Access-Control-Allow-Origin", "*"},
+        {"Access-Control-Allow-Methods", "GET, POST, OPTIONS"},
+        {"Access-Control-Allow-Headers", "Content-Type"},
+    });
+
     // ── 静态文件：前端 dist/ ──
     // 从 exe 所在目录查找 dist/
     std::string distPath;
