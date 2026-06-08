@@ -69,9 +69,9 @@ static std::string roomStatus(const Room& room) {
 static void printRooms() {
     printf("\n=== 房间列表 (%zu 个) ===\n", g_rooms.size());
     for (auto& [code, room] : g_rooms) {
-        printf("  %s  [%s]  %s  %d³  房主: %s",
+        printf("  %s  [%s]  %s  房主: %s",
             code.c_str(), timeStr(room.createdAtTime).c_str(),
-            roomStatus(room).c_str(), room.boardSize, room.hostAddr.c_str());
+            roomStatus(room).c_str(), room.hostAddr.c_str());
         if (room.hasGuest) printf("  客人: %s", room.guestAddr.c_str());
         if (room.terminated) printf("  %s胜", room.winner.c_str());
         printf("\n");
@@ -365,6 +365,11 @@ int main() {
                 res.set_content(R"({"error":"game not started"})", "application/json");
                 return;
             }
+            if (!room.gs) {
+                res.status = 500;
+                res.set_content(R"({"error":"game state is null"})", "application/json");
+                return;
+            }
             if (room.terminated) {
                 res.set_content(R"({"legal":false,"error":"game over"})", "application/json");
                 return;
@@ -447,6 +452,7 @@ int main() {
             if (it == g_rooms.end()) { res.status = 404; res.set_content(R"({"error":"not found"})", "application/json"); return; }
             Room& room = it->second;
             if (!room.started) { res.status = 400; res.set_content(R"({"error":"not started"})", "application/json"); return; }
+            if (!room.gs) { res.status = 500; res.set_content(R"({"error":"null gs"})", "application/json"); return; }
             if (room.terminated) { res.set_content(R"({"legal":false,"error":"game over"})", "application/json"); return; }
 
             int8_t current = room.gs->current;
