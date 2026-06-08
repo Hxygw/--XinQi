@@ -49,6 +49,7 @@
   let moveCount = $state(0);
   let terminal = $state(false);
   let winner = $state<"Black" | "White" | "Draw" | undefined>();
+  let lastPolledMoveCount = $state(0);
 
   // ── 房间模式 ──
   type RoomMode = "none" | "host" | "guest" | "playing";
@@ -61,6 +62,7 @@
   let joinCodeInput = $state("");
   let waitingOpponent = $state(false);
   let guestReady = $state(false);
+  let waitingHostReset = $state(false);
   let gameStarted = $state(false);
 
   // 本地 PvP 双玩家 ID（本地对战用）
@@ -178,6 +180,7 @@
     try {
       const room = await roomClient.createRoom(N);
       const join = await roomClient.joinRoom(room.room_code);
+      await roomClient.setReady(room.room_code, join.player_id);
       await roomClient.startGame(room.room_code, room.player_id);
       localBlackId = room.player_id;
       localWhiteId = join.player_id;
@@ -261,12 +264,14 @@
     roomMode = "none";
     gameStarted = false;
     guestReady = false;
+    waitingHostReset = false;
     localBlackId = "";
     localWhiteId = "";
     roomCode = "";
     playerId = "";
     roomHostId = "";
     waitingOpponent = false;
+    lastPolledMoveCount = 0;
     joinCodeInput = "";
     const total = N * N * N;
     board = new Uint8Array(total);
@@ -321,6 +326,11 @@
         startRoomGame();
         return;
       }
+      // 客人等待房主重置房间
+      if (roomMode === "guest" && waitingHostReset && !info.started) {
+        waitingHostReset = false;
+        guestReady = false;
+      }
     } catch (e) {
       // 404 → 房间已关闭
       if ((e as Error).message?.includes("HTTP 404")) {
@@ -346,6 +356,7 @@
     try {
       const gs = await roomClient.getState(roomCode);
       applyGameState(gs);
+      lastPolledMoveCount = moveCount;
       showNotification(t("notif.game_started"));
       // 开始对手落子轮询
       startRoomPoll();
@@ -371,10 +382,16 @@
 
     try {
       const gs = await roomClient.getState(roomCode);
+
+      // 对手落子音效（防止与己方操作重复播放）
+      if (gs.move_count > lastPolledMoveCount) {
+        playMoveSound(gs.terminal, undefined, false, false);
+        lastPolledMoveCount = gs.move_count;
+      }
+
       applyGameState(gs);
 
       if (terminal) {
-        playMoveSound(true, undefined, false, false);
         showNotification(t("notif.game_over"), 3000);
         return;
       }
@@ -479,6 +496,7 @@
     try {
       const gs = await roomClient.getState(roomCode);
       applyGameState(gs);
+      lastPolledMoveCount = moveCount;
     } catch (e) {
       showNotification(`${t("error.sync_failed")}: ${(e as Error).message}`, 5000);
     }
@@ -675,6 +693,7 @@
       gameStarted = false;
       localBlackId = "";
       localWhiteId = "";
+      lastPolledMoveCount = 0;
       const total = N * N * N;
       moveCount = 0;
       terminal = false;
@@ -702,6 +721,7 @@
         terminal = false;
         winner = undefined;
         moveCount = 0;
+        lastPolledMoveCount = 0;
         const total = N * N * N;
         board = new Uint8Array(total);
         currentPlayer = "Black";
@@ -719,10 +739,12 @@
       roomMode = "guest";
       gameStarted = false;
       waitingOpponent = true;
+      waitingHostReset = true;
       guestReady = false;
       terminal = false;
       winner = undefined;
       moveCount = 0;
+      lastPolledMoveCount = 0;
       const total = N * N * N;
       board = new Uint8Array(total);
       currentPlayer = "Black";
@@ -895,16 +917,22 @@
           {#if roomMode === "guest" && waitingOpponent}
             <div class="room-status">
               <div class="spinner"></div>
-              <p>{t("room.waiting_host")}</p>
+              {#if waitingHostReset}
+                <p>{t("room.waiting_host_reset")}</p>
+              {:else}
+                <p>{t("room.waiting_host")}</p>
+              {/if}
             </div>
-            {#if guestReady}
-              <button class="btn-action primary" disabled>
-                {t("room.ready_done")}
-              </button>
-            {:else}
-              <button class="btn-action primary" onclick={handleGuestReady}>
-                {t("room.ready")}
-              </button>
+            {#if !waitingHostReset}
+              {#if guestReady}
+                <button class="btn-action primary" disabled>
+                  {t("room.ready_done")}
+                </button>
+              {:else}
+                <button class="btn-action primary" onclick={handleGuestReady}>
+                  {t("room.ready")}
+                </button>
+              {/if}
             {/if}
             <button class="btn-action" onclick={handleLeaveRoom}>
               {t("room.leave")}
