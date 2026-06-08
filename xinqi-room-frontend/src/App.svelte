@@ -32,10 +32,10 @@
 
   // Board3D 场景颜色
   let sceneBg = $derived(isDark ? 0x0B0F19 : 0xFAFAF9);
-  let gridColor = $derived(isDark ? 0x64748B : 0xA8A29E);
-  let dotColor = $derived(isDark ? 0x64748B : 0xA8A29E);
+  let gridColor = $derived(isDark ? 0x94A3B8 : 0xA8A29E);
+  let dotColor = $derived(isDark ? 0x94A3B8 : 0xA8A29E);
   let innerCoreGlowColor = $derived(isDark ? 0xFFFFFF : 0x000000);
-  let gridOpacity = $derived(isDark ? 0.25 : 0.5);
+  let gridOpacity = $derived(isDark ? 0.4 : 0.5);
 
   // 棋子颜色（随主题变化）
   let stonePrimary = $derived(isDark ? 0x38BDF8 : 0x1E293B);
