@@ -443,7 +443,7 @@
       refreshInnerCores(); hoverInfo = "";
       return;
     }
-    browseMode = true; browseStep = 0; replaySteps = null;
+    // 弹出棋谱列表（不设 browseMode，确认加载后才设）
     try {
       recordList = await apiClient.listRecords();
       recordList.sort().reverse();
@@ -468,7 +468,7 @@
       }
       const result = await apiClient.replayRecord(rec);
       if (result.broken) showNotification(t("modal.warn"), 3000);
-      replaySteps = result.steps; browseStep = 0; applyBrowseStep(0);
+      browseMode = true; replaySteps = result.steps; browseStep = 0; applyBrowseStep(0);
     } catch (e) {
       showNotification(`${t("error.load_failed")}: ${(e as Error).message}`, 3000); currentRecord = null;
     } finally { browseBusy = false; }
@@ -497,23 +497,24 @@
 
   function browseGo(step: number) {
     if (!replaySteps) return;
-    const oldStep = browseStep;
-    const newStep = Math.max(0, Math.min(step, replaySteps.length - 1));
-    // 前进时播放音效
-    if (newStep > oldStep && newStep < replaySteps.length) {
-      const s = replaySteps[newStep];
-      if (s.last_move_is_move) playShift(); else playPlace();
-      // 检测是否发生了提子：比较两步间对方棋子数量
-      const prev = replaySteps[oldStep];
-      if (prev && s.board && prev.board) {
-        const enemyColor = s.current_player === "Black" ? 1 : 2; // 走棋方是对手的颜色
-        let before = 0, after = 0;
-        for (let i = 0; i < s.board.length; i++) {
-          if (prev.board[i] === enemyColor) before++;
-          if (s.board[i] === enemyColor) after++;
-        }
-        if (after < before) playCapture();
+    applyBrowseStep(Math.max(0, Math.min(step, replaySteps.length - 1)));
+  }
+
+  function browseNext() {
+    if (!replaySteps || browseStep >= replaySteps.length - 1) return;
+    const newStep = browseStep + 1;
+    const s = replaySteps[newStep];
+    if (s.last_move_is_move) playShift(); else playPlace();
+    // 检测提子：比较两步间对方棋子数量
+    const prev = replaySteps[browseStep];
+    if (prev && s.board && prev.board) {
+      const enemyColor = s.current_player === "Black" ? 1 : 2;
+      let before = 0, after = 0;
+      for (let i = 0; i < s.board.length; i++) {
+        if (prev.board[i] === enemyColor) before++;
+        if (s.board[i] === enemyColor) after++;
       }
+      if (after < before) playCapture();
     }
     applyBrowseStep(newStep);
   }
@@ -776,7 +777,7 @@
   <Modal
     show={showModal !== 'none'} mode={showModal}
     {recordList} {confirmTarget} {browseBusy}
-    onClose={() => { showModal = 'none'; browseMode = false; }}
+    onClose={() => { showModal = 'none'; }}
     onRefresh={async () => {
       try { recordList = await apiClient.listRecords(); recordList.sort().reverse(); } catch {}
     }}
@@ -794,7 +795,7 @@
         moveMode = false; moveSourceIdx = -1; moveBlockIndices = new Set(); validTargets = []; validTargetHover = null;
       } else { doLoadRecord(); }
     }}
-    onCancel={() => { const wasConfirm = showModal === 'confirm'; showModal = 'none'; if (wasConfirm) browseMode = false; }}
+    onCancel={() => { showModal = 'none'; }}
   />
 
   <!-- 规则面板 -->
@@ -859,7 +860,7 @@
           <input type="range" min={0} max={replaySteps.length-1}
             value={browseStep} oninput={(e) => browseGo(parseInt((e.target as HTMLInputElement).value))}
             class="browse-slider" />
-          <button class="browse-btn" onclick={() => browseGo(browseStep+1)} disabled={browseStep>=replaySteps.length-1}>▷</button>
+          <button class="browse-btn" onclick={browseNext} disabled={browseStep>=replaySteps.length-1}>▷</button>
           <button class="browse-btn" onclick={() => browseGo(replaySteps.length-1)} disabled={browseStep>=replaySteps.length-1}>▷|</button>
         </div>
       </div>

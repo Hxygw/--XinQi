@@ -1,12 +1,19 @@
 /**
  * 音效模块 — Web Audio API 合成音。
  *
- * 每次调用创建独立 AudioContext，在用户手势中触发无阻塞风险。
+ * 共享一个惰性 AudioContext，防止快速连续点击导致浏览器限制。
  */
+
+let _ctx: AudioContext | null = null;
+function getCtx(): AudioContext {
+  if (!_ctx) _ctx = new AudioContext();
+  if (_ctx.state === 'suspended') _ctx.resume();
+  return _ctx;
+}
 
 /** 提子：C大调和弦 + 高频闪光 */
 export function playCapture() {
-  const ctx = new AudioContext();
+  const ctx = getCtx();
   const t = ctx.currentTime;
 
   // 核心：C大调和弦（523/659/784Hz）
@@ -39,7 +46,7 @@ export function playCapture() {
 
 /** 落子：短促清脆，像晶体轻叩 */
 export function playPlace() {
-  const ctx = new AudioContext();
+  const ctx = getCtx();
   const t = ctx.currentTime;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
@@ -55,7 +62,7 @@ export function playPlace() {
 
 /** 挪子：机械感，稍沉，暗示结构移动 */
 export function playShift() {
-  const ctx = new AudioContext();
+  const ctx = getCtx();
   const t = ctx.currentTime;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
