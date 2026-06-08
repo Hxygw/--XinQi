@@ -875,6 +875,8 @@
 
   /* ── 主题变量 ── */
   :global(:root), :global([data-theme="light"]) {
+    user-select: none;
+    -webkit-user-select: none;
     --bg-body: #FAFAF9;
     --text-primary: #44403C;
     --text-secondary: #57534E;
@@ -1301,6 +1303,7 @@
     padding: 1rem 1.2rem; overflow-y: auto;
     font-size: 0.85rem; line-height: 1.7;
     color: var(--rules-body-text);
+    user-select: text; -webkit-user-select: text;
   }
   .rules-body::-webkit-scrollbar { width: 5px; }
   .rules-body::-webkit-scrollbar-track { background: transparent; }
