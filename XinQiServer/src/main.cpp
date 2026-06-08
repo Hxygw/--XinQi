@@ -586,7 +586,7 @@ int main()
     }
 
     // ── 前端 SPA fallback：所有非 /api/ 路由返回 index.html ──
-    svr.Get(R"(/(.*))", [](const httplib::Request& req, httplib::Response& res) {
+    svr.Get(R"(/(.*))", [&distPath](const httplib::Request& req, httplib::Response& res) {
         if (req.path.find("/api/") == 0) {
             res.status = 404;
             res.set_content("{\"error\":\"not found\"}", "application/json");
@@ -598,8 +598,8 @@ int main()
             return;
         }
         // SPA fallback
-        std::string index = (fs::current_path() / "dist" / "index.html").string();
-        std::ifstream f(index);
+        std::string indexPath = distPath.empty() ? (fs::current_path() / "dist" / "index.html").string() : (fs::path(distPath) / "index.html").string();
+        std::ifstream f(indexPath);
         if (f.is_open()) {
             std::string content((std::istreambuf_iterator<char>(f)), {});
             res.set_content(content, "text/html");
