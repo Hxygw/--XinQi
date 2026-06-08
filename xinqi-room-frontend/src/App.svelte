@@ -1457,8 +1457,8 @@
 
   /* ── 布局 ── */
   .game-layout {
-    display: flex; flex: 1; min-height: 0;
-    width: 100%;
+    display: flex; width: 100%;
+    height: calc(100vh - 56px);
   }
   .board-area { flex: 1; min-height: 0; touch-action: none; }
 
