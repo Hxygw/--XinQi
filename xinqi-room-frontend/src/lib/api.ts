@@ -103,6 +103,14 @@ export const roomClient = {
     });
   },
 
+  /** 心跳（房主定期发送，保持房间活跃） */
+  ping(code: string): Promise<{ ok: boolean }> {
+    return req(`/api/room/${code}/ping`, {
+      method: "POST",
+      body: "{}",
+    });
+  },
+
   /** 离开房间（房主离开=关闭，客人离开=清空状态） */
   leaveRoom(code: string, playerId: string): Promise<{ ok: boolean; closed?: boolean }> {
     return req(`/api/room/${code}/leave`, {

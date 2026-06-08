@@ -177,7 +177,7 @@ static void cleanupThread() {
             // 5 分钟无活动的房间（房主可能已关闭浏览器）
             if (it->second.lastActivity.time_since_epoch().count() > 0) {
                 auto idle = std::chrono::duration_cast<std::chrono::minutes>(now - it->second.lastActivity).count();
-                if (idle >= 5) remove = true;
+                if (idle >= 20) remove = true;
             }
             if (remove) {
                 if (it->second.gs) XinQi_Destroy(it->second.gs);
@@ -383,6 +383,16 @@ int main() {
             res.status = 403;
             res.set_content(R"({"error":"not in room"})", "application/json");
         } catch (...) { res.status = 400; res.set_content(R"({"error":"invalid"})", "application/json"); }
+    });
+
+    // ── POST /api/room/:code/ping ──
+    svr.Post(R"(/api/room/(\d+)/ping)", [](const httplib::Request& req, httplib::Response& res) {
+        std::string code = req.matches[1];
+        std::lock_guard<std::mutex> lock(g_roomsMutex);
+        auto it = g_rooms.find(code);
+        if (it == g_rooms.end()) { res.status = 404; res.set_content(R"({"error":"not found"})", "application/json"); return; }
+        touchRoom(it->second);
+        res.set_content(R"({"ok":true})", "application/json");
     });
 
     // ── POST /api/room/:code/start ──

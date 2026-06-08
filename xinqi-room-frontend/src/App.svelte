@@ -299,6 +299,11 @@
   async function pollInfo() {
     if (!roomCode || roomMode === "none" || gameStarted) return;
 
+    // 房主心跳
+    if (roomMode === "host") {
+      roomClient.ping(roomCode).catch(() => {});
+    }
+
     try {
       const info = await roomClient.getInfo(roomCode);
       guestReady = info.guest_ready;
