@@ -440,6 +440,7 @@
       const idx = to1D(pt.x, pt.y, pt.z, N);
       const result = executePlace(board, idx, player, checker, historyHashes, moveCount, vacancyOwners);
       if (result.legal) {
+        board = new Uint8Array(board); // 触发 Svelte 响应式
         playMoveSound(result.terminal, undefined, result.captured.length > 0, false);
         historyHashes.add(boardHash(board));
         moveCount++;
@@ -497,8 +498,14 @@
     if (localPlaying) {
       const player = currentPlayer === "Black" ? 1 : 2;
       const targetIdx = to1D(pt.x, pt.y, pt.z, N);
-      const result = executeShift(board, moveSourceIdx, targetIdx, player, checker, historyHashes, new Set(), vacancyOwners);
+      // 构建己方空位集合
+      const ownVac = new Set<number>();
+      for (const [idx, owner] of vacancyOwners) {
+        if (owner === currentPlayer) ownVac.add(idx);
+      }
+      const result = executeShift(board, moveSourceIdx, targetIdx, player, checker, historyHashes, ownVac, vacancyOwners);
       if (result.legal) {
+        board = new Uint8Array(board); // 触发 Svelte 响应式
         playMoveSound(result.terminal, undefined, result.captured.length > 0, true);
         historyHashes.add(boardHash(board));
         exitMoveMode();
