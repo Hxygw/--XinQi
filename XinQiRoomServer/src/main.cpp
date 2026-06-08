@@ -9,6 +9,9 @@
  * 无 AI、无棋谱、纯房间对战
  */
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
 #include <XinQiCore.h>
 #include <httplib.h>
 #include <json.hpp>
@@ -175,8 +178,26 @@ static void cleanupThread() {
 // 入口
 // ══════════════════════════════════════════════════════════════
 
+static LONG WINAPI sehFilter(EXCEPTION_POINTERS* ep) {
+    FILE* f = fopen("crasher.log", "w");
+    if (f) {
+        fprintf(f, "SEH exception code: 0x%08X at address: %p\n",
+            ep->ExceptionRecord->ExceptionCode,
+            ep->ExceptionRecord->ExceptionAddress);
+        fclose(f);
+    }
+    printf("\n*** CRASH: code=0x%08X addr=%p ***\n",
+        ep->ExceptionRecord->ExceptionCode,
+        ep->ExceptionRecord->ExceptionAddress);
+    printf("Check crasher.log for details.\n");
+    printf("Press Enter to exit...");
+    getchar();
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
 int main() {
-    // 日志文件，崩溃时可查看 crasher.log
+    SetUnhandledExceptionFilter(sehFilter);
+    // 日志文件
     freopen("crasher.log", "w", stderr);
     try {
     httplib::Server svr;
