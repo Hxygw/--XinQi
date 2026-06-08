@@ -348,6 +348,37 @@
       camera.lookAt(center, center, center);
       keepLoopAlive();
     }, { passive: false });
+    // 触屏双指缩放
+    let lastPinchDist = 0;
+    renderer.domElement.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastPinchDist = Math.sqrt(dx * dx + dy * dy);
+      }
+    }, { passive: false });
+    renderer.domElement.addEventListener("touchmove", (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (lastPinchDist > 0) {
+          const delta = (lastPinchDist - dist) * 0.03;
+          const center = (N - 1) / 2;
+          zoomLevel = Math.max(3, Math.min(20, zoomLevel + delta));
+          const dir = new THREE.Vector3(1, 0, 0);
+          camera.position.copy(dir.multiplyScalar(zoomLevel)).add(new THREE.Vector3(center, center, center));
+          camera.lookAt(center, center, center);
+          keepLoopAlive();
+        }
+        lastPinchDist = dist;
+      }
+    }, { passive: false });
+    renderer.domElement.addEventListener("touchend", () => { lastPinchDist = 0; });
+    // 阻止画布长按选中
+    renderer.domElement.addEventListener("selectstart", (e) => e.preventDefault());
     document.addEventListener("keydown", onKeyDown);
 
     // 响应窗口大小变化
@@ -892,8 +923,9 @@
   }
 
   function onPointerLeave() {
+    // 触屏点选预览中：不清除状态，让第二下确认
+    if (pendingTapIdx >= 0) return;
     hoveredIdx = -1;
-    pendingTapIdx = -1;
     renderer.domElement.style.cursor = "default";
     onleave?.();
     renderer.domElement.dispatchEvent(new PointerEvent('pointerup', {

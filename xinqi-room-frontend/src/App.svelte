@@ -1654,14 +1654,23 @@
     .slider-val { font-size: 0.78rem; }
   }
 
-  /* ── 禁止选中（除规则文本）── */
+  /* ── 禁止选中（除规则文本和输入框）── */
+  :global(body), :global(body *) {
+    -webkit-user-select: none !important; user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
   :global(body) {
-    -webkit-user-select: none; user-select: none;
-    -webkit-touch-callout: none;
     overscroll-behavior: none;
   }
-  .rules-body {
-    -webkit-user-select: text; user-select: text;
+  :global(input), :global(textarea),
+  .rules-body, .rules-body * {
+    -webkit-user-select: text !important; user-select: text !important;
+    -webkit-touch-callout: default !important;
+  }
+  :global(canvas) {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important; user-select: none !important;
+    outline: none !important;
   }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
