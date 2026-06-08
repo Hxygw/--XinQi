@@ -431,24 +431,22 @@
     }
   }
 
-  async function openBrowser() {
-    if (browseMode) {
-      browseMode = false; currentRecord = null; replaySteps = null;
-      moveMode = false; moveSourceIdx = -1; moveBlockIndices = new Set(); validTargets = []; validTargetHover = null;
-      // 清空棋盘
-      const total = N * N * N;
-      board = new Uint8Array(total);
-      currentPlayer = "Black"; moveCount = 0; terminal = false; winner = undefined;
-      vacancyOwners = new Map(); historyHashes = new Set();
-      refreshInnerCores(); hoverInfo = "";
-      return;
-    }
-    // 弹出棋谱列表（不设 browseMode，确认加载后才设）
+  async function showRecordPicker() {
     try {
       recordList = await apiClient.listRecords();
       recordList.sort().reverse();
       showModal = 'records';
     } catch { showModal = 'none'; }
+  }
+
+  function exitBrowse() {
+    browseMode = false; currentRecord = null; replaySteps = null;
+    moveMode = false; moveSourceIdx = -1; moveBlockIndices = new Set(); validTargets = []; validTargetHover = null;
+    const total = N * N * N;
+    board = new Uint8Array(total);
+    currentPlayer = "Black"; moveCount = 0; terminal = false; winner = undefined;
+    vacancyOwners = new Map(); historyHashes = new Set();
+    refreshInnerCores(); hoverInfo = "";
   }
 
   function openConfirm(filename: string) { confirmTarget = filename; showModal = 'confirm'; }
@@ -655,11 +653,11 @@
 
           {#if !gameStarted}
             {#if browseMode}
-              <button class="btn-action primary" onclick={openBrowser}>
+              <button class="btn-action primary" onclick={exitBrowse}>
                 <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 {t("sidebar.exit_browse")}
               </button>
-              <button class="btn-action primary" onclick={() => { browseMode = false; setTimeout(() => openBrowser(), 0); }}>
+              <button class="btn-action primary" onclick={showRecordPicker}>
                 <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 {t("sidebar.switch_record")}
               </button>
@@ -689,7 +687,7 @@
                 {t("sidebar.start_game")}
               </button>
 
-              <button class="btn-action primary" onclick={openBrowser}>
+              <button class="btn-action primary" onclick={showRecordPicker}>
                 <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 {t("sidebar.browse_records")}
               </button>
