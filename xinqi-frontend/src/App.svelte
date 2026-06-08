@@ -485,6 +485,13 @@
       const w = currentRecord.winner;
       winner = w === "Black" ? "Black" : w === "White" ? "White" : "Draw";
     } else { winner = undefined; }
+    // 从棋盘数据还原内芯空位所有者
+    const owners = new Map<number, "Black" | "White">();
+    for (let i = 0; i < s.board.length; i++) {
+      if (s.board[i] === 3) owners.set(i, "Black");
+      else if (s.board[i] === 4) owners.set(i, "White");
+    }
+    vacancyOwners = owners;
     refreshInnerCores(); browseStep = step; browseTick++;
   }
 
