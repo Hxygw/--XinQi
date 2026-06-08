@@ -35,7 +35,7 @@
 - 🌐 **中英双语界面** — 一键切换
 - 🌗 **亮暗双主题**
 
-> 完整规则见 [`开发文档/设计/游戏规则.md`](开发文档/设计/游戏规则.md)
+> 完整规则：[中文](开发文档/设计/游戏规则.md) | [English](开发文档/设计/game-rules.md)
 
 ### 截图
 
@@ -154,7 +154,7 @@ XinQi (芯棋, "Core Chess") is a two-player zero-sum board game played on an **
 - 🌐 **Bilingual UI** — Chinese/English toggle
 - 🌗 **Dark/Light themes**
 
-> Full rules: [`开发文档/设计/游戏规则.md`](开发文档/设计/游戏规则.md) (Chinese)
+> Full rules: [中文](开发文档/设计/游戏规则.md) | [English](开发文档/设计/game-rules.md)
 
 ### Screenshots
 
