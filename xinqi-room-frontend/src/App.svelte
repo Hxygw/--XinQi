@@ -9,6 +9,7 @@
   import { roomClient } from "./lib/api";
   import type { RoomInfoResponse } from "./lib/api";
   import { LegalityChecker, boardHash } from "./lib/legality";
+  import { executePlace, executeShift } from "./lib/localEngine";
   import {
     findAllInnerCores, buildInnerCoreSet, getNeighbors6, to3D, to1D,
   } from "./lib/boardUtils";
@@ -54,7 +55,8 @@
   // ── 房间模式 ──
   type RoomMode = "none" | "host" | "guest" | "playing";
   let roomMode = $state<RoomMode>("none");
-  let localPvP = $derived(!!localBlackId); // 有 localBlackId 即为本地 PvP
+  let localPvP = $derived(!!localBlackId || localPlaying); // 本地 PvP
+  let localPlaying = $state(false); // 新本地引擎模式
   let roomCode = $state("");
   let playerId = $state("");
   let playerRole = $state<"Black" | "White">("Black");
@@ -174,31 +176,23 @@
     refreshInnerCores();
   }
 
-  // ── 本地 PvP（通过服务端） ──
+  // ── 本地 PvP（纯本地引擎） ──
 
-  async function initLocalPvP() {
-    try {
-      const room = await roomClient.createRoom(N);
-      const join = await roomClient.joinRoom(room.room_code);
-      await roomClient.setReady(room.room_code, join.player_id);
-      await roomClient.startGame(room.room_code, room.player_id);
-      localBlackId = room.player_id;
-      localWhiteId = join.player_id;
-      roomCode = room.room_code;
-      playerId = room.player_id;
-      playerRole = "Black";
-      roomHostId = room.player_id;
-      roomMode = "playing";
-      gameStarted = true;
-      // 第一次获取状态
-      try {
-        const gs = await roomClient.getState(roomCode);
-        applyGameState(gs);
-      } catch {}
-      showNotification(t("room.pvp_local"));
-    } catch (e) {
-      showNotification(`${t("error.operation_failed")}: ${(e as Error).message}`, 5000);
-    }
+  function initLocalPvP() {
+    localPlaying = true;
+    roomMode = "playing";
+    gameStarted = true;
+    const total = N * N * N;
+    board = new Uint8Array(total);
+    currentPlayer = "Black";
+    moveCount = 0;
+    terminal = false;
+    winner = undefined;
+    vacancyOwners = new Map();
+    historyHashes = new Set();
+    moveMode = false;
+    refreshInnerCores();
+    showNotification(t("room.pvp_local"));
   }
 
   // ── 房间操作 ──
@@ -235,6 +229,7 @@
   }
 
   async function handleHostStartGame() {
+    if (localPlaying) return; // 本地引擎模式无需服务端调用
     try {
       await roomClient.startGame(roomCode, playerId, N);
       waitingOpponent = false;
@@ -411,7 +406,9 @@
   }
 
   function isMyTurn(): boolean {
-    // 本地 PvP：当前玩家轮到谁就是谁
+    // 本地引擎模式：始终是自己的回合
+    if (localPlaying) return true;
+    // 本地 PvP（旧服务器版）：当前玩家轮到谁就是谁
     if (localBlackId && localWhiteId) return true;
     // 房间模式：只有自己的回合
     return playerRole === currentPlayer;
@@ -432,8 +429,34 @@
 
   async function handlePlace(pt: { x: number; y: number; z: number }) {
     if (terminal) return;
-    if (!localBlackId && !isMyTurn()) {
+    if (!localPlaying && !localBlackId && !isMyTurn()) {
       showNotification(t("room.opponent_turn"), 1500);
+      return;
+    }
+
+    // ── 本地引擎分支 ──
+    if (localPlaying) {
+      const player = currentPlayer === "Black" ? 1 : 2;
+      const idx = to1D(pt.x, pt.y, pt.z, N);
+      const result = executePlace(board, idx, player, checker, historyHashes, moveCount, vacancyOwners);
+      if (result.legal) {
+        playMoveSound(result.terminal, undefined, result.captured.length > 0, false);
+        historyHashes.add(boardHash(board));
+        moveCount++;
+        if (result.terminal) {
+          terminal = true;
+          winner = result.winner;
+          showNotification(t("notif.game_over"), 3000);
+        } else {
+          currentPlayer = currentPlayer === "Black" ? "White" : "Black";
+        }
+        refreshInnerCores();
+      } else {
+        const msg = result.error === "suicide" ? t("hover.suicide") :
+          result.error === "first_move_center" ? t("hover.first_move_center") :
+          result.error === "core_vacancy" ? t("hover.core_vacancy_own") : t("hover.illegal");
+        showNotification(msg, 2000);
+      }
       return;
     }
 
@@ -465,8 +488,32 @@
 
   async function handleMoveStone(pt: { x: number; y: number; z: number }) {
     if (terminal) return;
-    if (!localBlackId && !isMyTurn()) {
+    if (!localPlaying && !localBlackId && !isMyTurn()) {
       showNotification(t("room.opponent_turn"), 1500);
+      return;
+    }
+
+    // ── 本地引擎分支 ──
+    if (localPlaying) {
+      const player = currentPlayer === "Black" ? 1 : 2;
+      const targetIdx = to1D(pt.x, pt.y, pt.z, N);
+      const result = executeShift(board, moveSourceIdx, targetIdx, player, checker, historyHashes, new Set(), vacancyOwners);
+      if (result.legal) {
+        playMoveSound(result.terminal, undefined, result.captured.length > 0, true);
+        historyHashes.add(boardHash(board));
+        exitMoveMode();
+        moveCount++;
+        if (result.terminal) {
+          terminal = true;
+          winner = result.winner;
+          showNotification(t("notif.game_over"), 3000);
+        } else {
+          currentPlayer = currentPlayer === "Black" ? "White" : "Black";
+        }
+        refreshInnerCores();
+      } else {
+        showNotification(`${t("notif.shift_failed")}: ${result.error || ""}`, 2000);
+      }
       return;
     }
 
@@ -686,9 +733,10 @@
     !gameStarted || (!terminal && (localPvP || isMyTurn()))
   );
 
-  // 退出房间
+  // 退出游戏
   function handleExitGame() {
     if (localPvP) {
+      localPlaying = false;
       roomMode = "none";
       gameStarted = false;
       localBlackId = "";
@@ -707,8 +755,27 @@
     }
   }
 
+  /** 本地引擎重新开始一局 */
+  function handleNewLocalGame() {
+    localPlaying = true;
+    roomMode = "playing";
+    gameStarted = true;
+    const total = N * N * N;
+    board = new Uint8Array(total);
+    currentPlayer = "Black";
+    moveCount = 0;
+    terminal = false;
+    winner = undefined;
+    vacancyOwners = new Map();
+    historyHashes = new Set();
+    moveMode = false;
+    refreshInnerCores();
+    showNotification(t("room.pvp_local"));
+  }
+
   async function handleReturnToRoom() {
     if (roomMode !== "playing") return;
+    if (localPlaying) return; // 本地引擎模式通过 handleNewLocalGame 重新开始
 
     if (playerRole === "Black") {
       // 房主 → 调用 reset API
@@ -942,11 +1009,19 @@
         {:else}
           <!-- 游戏中 -->
           {#if terminal && roomMode === "playing"}
-            <!-- 终局：返回房间 -->
-            <button class="btn-action primary" onclick={handleReturnToRoom}>
-              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              {t("room.return_room")}
-            </button>
+            {#if localPlaying}
+              <!-- 终局（本地引擎）：重新开始 -->
+              <button class="btn-action primary" onclick={handleNewLocalGame}>
+                <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                {t("sidebar.new_game")}
+              </button>
+            {:else}
+              <!-- 终局（房间模式）：返回房间 -->
+              <button class="btn-action primary" onclick={handleReturnToRoom}>
+                <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                {t("room.return_room")}
+              </button>
+            {/if}
           {:else}
             <button class="btn-action primary" onclick={handleExitGame}>
               <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
