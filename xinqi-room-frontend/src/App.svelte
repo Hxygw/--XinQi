@@ -143,7 +143,6 @@
   onMount(() => {
     document.body.setAttribute("data-theme", "light");
     checker = new LegalityChecker(N);
-    initLocalPvP();
   });
 
   onDestroy(() => {
@@ -724,11 +723,6 @@
             <button class="btn-action primary" onclick={handleCreateRoom}>
               <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
               {t("room.create_room")}
-            </button>
-
-            <button class="btn-action primary" onclick={() => {}}>
-              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13 12H3"/></svg>
-              {t("room.join_room")}
             </button>
 
             <!-- 加入房间输入 -->
