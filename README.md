@@ -35,7 +35,26 @@
 - 🌐 **中英双语界面** — 一键切换
 - 🌗 **亮暗双主题**
 
-> 完整规则：[中文](开发文档/设计/游戏规则.md) | [English](开发文档/设计/game-rules.md)
+### 快速规则
+
+棋盘是 **N×N×N 立体格点**（默认 5×5×5 = 125 格）。黑白轮流落子，黑先。
+
+**两种操作（每手选其一）：**
+
+| 操作 | 说明 |
+|------|------|
+| **落子** | 在空格放己方棋子。不能自杀、不能立即恢复上一步局面、第一步禁止天元 |
+| **挪子** | 将一个**内芯**移到相邻格，原位变成永久"伤疤"（内芯空位）。挪子消耗一手棋 |
+
+**内芯**：六个方向（±X/±Y/±Z）全部被己方或棋盘壁包围的棋子，是最核心的战略资源。
+
+**提子**：落子/挪子后，在 X/Y/Z 三个截面中**各自独立**检查气。任一截面内对方连通块无气 → 整个连通块被提走。
+
+**胜利条件（满足任一即赢）：**
+1. **内芯侵入** 🏆 — 你占据对手的内芯空位（伤疤），立即获胜（主要胜利路径）
+2. **清台终局** — 你触发吃子后，对手棋盘上不存在任何内芯，立即获胜（兜底）
+
+> 完整规则：[中文](开发文档/设计/游戏规则.md) · [English](开发文档/设计/game-rules.md)
 
 ### 截图
 
@@ -154,7 +173,26 @@ XinQi (芯棋, "Core Chess") is a two-player zero-sum board game played on an **
 - 🌐 **Bilingual UI** — Chinese/English toggle
 - 🌗 **Dark/Light themes**
 
-> Full rules: [中文](开发文档/设计/游戏规则.md) | [English](开发文档/设计/game-rules.md)
+### Quick Rules
+
+The board is an **N×N×N 3D lattice** (default 5×5×5 = 125 cells). Black and White alternate, Black goes first.
+
+**Two actions per turn (pick one):**
+
+| Action | Description |
+|--------|-------------|
+| **Place** | Put your stone on an empty cell. No suicide, no super-KO, first move cannot be the center |
+| **Shift** | Move an **inner core** to an adjacent cell, leaving a permanent "scar" (core vacancy). Costs one turn |
+
+**Inner Core**: A stone whose six directions (±X/±Y/±Z) are all occupied by friendly stones or the board boundary. The most critical strategic resource.
+
+**Capture**: After each Place/Shift, liberties are checked **independently** in the X, Y, and Z 2D sections. If an opponent's connected group has zero liberties in any section, the entire group is removed.
+
+**Win conditions (first to achieve wins):**
+1. **Core Invasion** 🏆 — Occupy the opponent's core vacancy (scar). Game over. (Primary win path)
+2. **Clear Board** — After triggering a capture, the opponent has zero inner cores remaining. Game over. (Safety net)
+
+> Full rules: [中文](开发文档/设计/游戏规则.md) · [English](开发文档/设计/game-rules.md)
 
 ### Screenshots
 
