@@ -244,12 +244,12 @@
     if (pollTimer) clearTimeout(pollTimer);
     pollTimer = null;
 
-    // 房主离开时关闭房间
-    if (roomMode === "host" && roomCode && playerId) {
+    // 离开房间（房主=关闭，客人=清理状态）
+    if (roomCode && playerId) {
       try {
-        await roomClient.closeRoom(roomCode, playerId);
+        await roomClient.leaveRoom(roomCode, playerId);
       } catch {
-        // 忽略关闭失败
+        // 忽略
       }
     }
 
@@ -304,6 +304,12 @@
       guestReady = info.guest_ready;
       if (!info.started && info.has_guest && roomMode === "host") {
         waitingOpponent = false;
+      }
+      if (!info.started && !info.has_guest && roomMode === "host" && !waitingOpponent) {
+        // 客人离开了房间
+        showNotification(t("room.guest_left"), 3000);
+        waitingOpponent = true;
+        guestReady = false;
       }
       if (info.started && !gameStarted) {
         // 游戏已开始，切换为 playing

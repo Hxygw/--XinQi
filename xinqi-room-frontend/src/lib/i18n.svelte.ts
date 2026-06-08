@@ -61,6 +61,7 @@ const dict: Translations = {
   "room.guest_not_ready": { zh: "客人未准备", en: "Guest not ready" },
   "room.return_room": { zh: "返回房间", en: "Return to Room" },
   "room.room_closed": { zh: "房间已关闭", en: "Room closed" },
+  "room.guest_left": { zh: "客人已离开", en: "Guest left" },
 
   // 玩家
   "player.black": { zh: "黑方", en: "Black" },

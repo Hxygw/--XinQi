@@ -71,7 +71,7 @@ static std::string roomStatus(const Room& room) {
 }
 
 static void printRooms() {
-    printf("\n=== 房间列表 (%zu 个) ===\n", g_rooms.size());
+    printf("\n=== Rooms (%zu) ===\n", g_rooms.size());
     for (auto& [code, room] : g_rooms) {
         printf("  %s  [%s]  %s  Host: %s",
             code.c_str(), timeStr(room.createdAtTime).c_str(),
@@ -332,6 +332,40 @@ int main() {
             if (room.started) { res.status = 400; res.set_content(R"({"error":"already started"})", "application/json"); return; }
             room.guestReady = true;
             res.set_content(R"({"ok":true})", "application/json");
+        } catch (...) { res.status = 400; res.set_content(R"({"error":"invalid"})", "application/json"); }
+    });
+
+    // ── POST /api/room/:code/leave ──
+    svr.Post(R"(/api/room/(\d+)/leave)", [](const httplib::Request& req, httplib::Response& res) {
+        try {
+            std::string code = req.matches[1];
+            auto body = json::parse(req.body);
+            std::string playerId = body["player_id"];
+
+            std::lock_guard<std::mutex> lock(g_roomsMutex);
+            auto it = g_rooms.find(code);
+            if (it == g_rooms.end()) { res.status = 404; res.set_content(R"({"error":"not found"})", "application/json"); return; }
+            Room& room = it->second;
+            if (room.hostId == playerId) {
+                // 房主离开 → 关闭房间
+                if (room.gs) XinQi_Destroy(room.gs);
+                g_rooms.erase(it);
+                printRooms();
+                res.set_content(R"({"ok":true,"closed":true})", "application/json");
+                return;
+            }
+            if (room.whiteId == playerId) {
+                // 客人离开 → 清空客人状态
+                room.hasGuest = false;
+                room.whiteId = "";
+                room.guestAddr = "";
+                room.guestReady = false;
+                printRooms();
+                res.set_content(R"({"ok":true})", "application/json");
+                return;
+            }
+            res.status = 403;
+            res.set_content(R"({"error":"not in room"})", "application/json");
         } catch (...) { res.status = 400; res.set_content(R"({"error":"invalid"})", "application/json"); }
     });
 

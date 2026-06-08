@@ -103,9 +103,9 @@ export const roomClient = {
     });
   },
 
-  /** 房主关闭房间 */
-  closeRoom(code: string, playerId: string): Promise<{ ok: boolean }> {
-    return req(`/api/room/${code}/close`, {
+  /** 离开房间（房主离开=关闭，客人离开=清空状态） */
+  leaveRoom(code: string, playerId: string): Promise<{ ok: boolean; closed?: boolean }> {
+    return req(`/api/room/${code}/leave`, {
       method: "POST",
       body: JSON.stringify({ player_id: playerId }),
     });
