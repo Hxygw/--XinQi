@@ -242,7 +242,7 @@ int main()
                 g_winner = g_gs->current == COLOR_BLACK ? "Black" : "White";
             }
             if (r >= RESULT_OK) {
-                json m; m["x"] = x; m["y"] = y; m["z"] = z; m["is_move"] = false;
+                json m; m["x"] = x; m["y"] = y; m["z"] = z; m["is_move"] = false; m["result_code"] = r;
                 g_moves.push_back(m);
             }
             json j = resultToJson(r, g_gs, x, y, z);
@@ -286,7 +286,7 @@ int main()
             if (r >= RESULT_OK) {
                 json m; m["x"] = fx; m["y"] = fy; m["z"] = fz;
                 m["target_x"] = tx; m["target_y"] = ty; m["target_z"] = tz;
-                m["is_move"] = true;
+                m["is_move"] = true; m["result_code"] = r;
                 g_moves.push_back(m);
             }
             json j = resultToJson(r, g_gs, tx, ty, tz);
@@ -488,6 +488,7 @@ int main()
                     s["vacancy_indices"] = vac;
                     s["last_move"] = {{"x", x}, {"y", y}, {"z", z}};
                     s["last_move_is_move"] = isMove;
+                    s["result_code"] = r;
                     steps.push_back(s);
                 }
             }

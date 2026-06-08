@@ -526,9 +526,7 @@
       captured = after < before;
     }
     // 音效优先级：终局 > 提子 > 落子/挪子
-    if (isLast && hasWinner) playVictoryIntrusion();
-    else if (captured) playCapture();
-    else if (s.last_move_is_move) playShift(); else playPlace();
+    playMoveSound(isLast && !!hasWinner, s.result_code, captured, !!s.last_move_is_move);
     applyBrowseStep(newStep);
   }
 

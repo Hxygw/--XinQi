@@ -50,5 +50,18 @@ export interface MoveStoneResponse {
   next_player: "Black" | "White";
   terminal: boolean;
   winner?: "Black" | "White" | "Draw";
+  result_code?: number;
   error?: string;
+}
+
+/** 棋谱回放每一步的数据 */
+export interface ReplayStep {
+  board: number[];
+  current_player: "Black" | "White";
+  move_count: number;
+  inner_core_count: { Black: number; White: number };
+  vacancy_indices: number[];
+  last_move?: { x: number; y: number; z: number };
+  last_move_is_move?: boolean;
+  result_code?: number;
 }
