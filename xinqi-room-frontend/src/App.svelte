@@ -904,7 +904,6 @@
 
       <!-- 手机版底部操作栏 -->
       <div class="mobile-bottom-bar" style={turnColorRgb ? `--turn-rgb:${turnColorRgb}` : ''}>
-        <div class="turn-strip"></div>
         {#if gameStarted}
           <!-- 游戏中：剖面控制 -->
           <div class="section-group">
@@ -1699,16 +1698,13 @@
     .mobile-bottom-bar {
       display: flex; flex-direction: column; gap: 8px;
       padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 20px);
-      background: var(--sidebar-bg);
+      background: linear-gradient(180deg, rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.12), transparent 40%),
+                  var(--sidebar-bg);
       border-top: 1px solid var(--border-light);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       position: relative; overflow-y: auto;
       flex-shrink: 0;
-    }
-    .turn-strip {
-      flex-shrink: 0; height: 3px; border-radius: 2px;
-      background: rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.35);
     }
     .mobile-bottom-bar .section-group {
       display: flex; flex-direction: column;
