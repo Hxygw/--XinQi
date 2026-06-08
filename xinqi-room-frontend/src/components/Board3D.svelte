@@ -884,6 +884,8 @@
 
   function onKeyDown(event: KeyboardEvent) {
     const key = event.key;
+    // 焦点在输入框中时跳过快捷键
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
     if (key === '`' || key === 'Escape') {
       onSectionChange?.(null, 0);
       event.preventDefault();
