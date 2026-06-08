@@ -15,7 +15,6 @@
   import { t, setLang, getLang } from "./lib/i18n.svelte";
   import type { Lang } from "./lib/i18n.svelte";
   import { playPlace, playShift, playCapture, playVictoryIntrusion, playVictoryAnnihilation } from "./lib/sound";
-  import { executePlace, executeMoveStone } from "./lib/localGame";
 
   // ─ 游戏状态 ──
   let status = $state("ready");
@@ -54,7 +53,7 @@
   // ── 房间模式 ──
   type RoomMode = "none" | "host" | "guest" | "playing";
   let roomMode = $state<RoomMode>("none");
-  let localGame = $state(false);  // true=本地PvP, false=房间网络
+  let localPvP = $derived(!!localBlackId); // 有 localBlackId 即为本地 PvP
   let roomCode = $state("");
   let playerId = $state("");
   let playerRole = $state<"Black" | "White">("Black");
@@ -62,6 +61,10 @@
   let joinCodeInput = $state("");
   let waitingOpponent = $state(false);
   let gameStarted = $state(false);
+
+  // 本地 PvP 双玩家 ID（本地对战用）
+  let localBlackId = $state("");
+  let localWhiteId = $state("");
 
   // 轮询定时器
   let pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -169,29 +172,30 @@
     refreshInnerCores();
   }
 
-  // ── 本地 PvP ──
+  // ── 本地 PvP（通过服务端） ──
 
-  function initLocalPvP() {
-    localGame = true;
-    roomMode = "playing";
-    gameStarted = true;
-    const total = N * N * N;
-    board = new Uint8Array(total);
-    currentPlayer = "Black";
-    moveCount = 0;
-    terminal = false;
-    winner = undefined;
-    vacancyOwners = new Map();
-    historyHashes = new Set();
-    moveMode = false;
-    moveSourceIdx = -1;
-    moveBlockIndices = new Set();
-    validTargets = [];
-    validTargetHover = null;
-    status = "ready";
-    if (checker.N !== N) checker.reinit(N);
-    refreshInnerCores();
-    showNotification(t("notif.game_started"));
+  async function initLocalPvP() {
+    try {
+      const room = await roomClient.createRoom(N);
+      const join = await roomClient.joinRoom(room.room_code);
+      await roomClient.startGame(room.room_code, room.player_id);
+      localBlackId = room.player_id;
+      localWhiteId = join.player_id;
+      roomCode = room.room_code;
+      playerId = room.player_id;
+      playerRole = "Black";
+      roomHostId = room.player_id;
+      roomMode = "playing";
+      gameStarted = true;
+      // 第一次获取状态
+      try {
+        const gs = await roomClient.getState(roomCode);
+        applyGameState(gs);
+      } catch {}
+      showNotification(t("room.pvp_local"));
+    } catch (e) {
+      showNotification(`${t("error.operation_failed")}: ${(e as Error).message}`, 5000);
+    }
   }
 
   // ── 房间操作 ──
@@ -242,7 +246,8 @@
     pollTimer = null;
     roomMode = "none";
     gameStarted = false;
-    localGame = false;
+    localBlackId = "";
+    localWhiteId = "";
     roomCode = "";
     playerId = "";
     roomHostId = "";
@@ -290,7 +295,6 @@
   }
 
   async function startRoomGame() {
-    localGame = false;
     roomMode = "playing";
     gameStarted = true;
     waitingOpponent = false;
@@ -310,16 +314,16 @@
   }
 
   function startRoomPoll() {
-    if (!localGame) scheduleRoomPoll();
+    scheduleRoomPoll();
   }
 
   function scheduleRoomPoll() {
-    if (localGame || terminal || !gameStarted || roomMode !== "playing") return;
+    if (terminal || !gameStarted || roomMode !== "playing") return;
     pollTimer = setTimeout(doRoomPoll, 1500);
   }
 
   async function doRoomPoll() {
-    if (localGame || terminal || !gameStarted || roomMode !== "playing") {
+    if (terminal || !gameStarted || roomMode !== "playing") {
       pollTimer = null;
       return;
     }
@@ -344,6 +348,9 @@
   }
 
   function isMyTurn(): boolean {
+    // 本地 PvP：当前玩家轮到谁就是谁
+    if (localBlackId && localWhiteId) return true;
+    // 房间模式：只有自己的回合
     return playerRole === currentPlayer;
   }
 
@@ -362,108 +369,67 @@
 
   async function handlePlace(pt: { x: number; y: number; z: number }) {
     if (terminal) return;
-    if (!localGame && !isMyTurn()) {
+    if (!localBlackId && !isMyTurn()) {
       showNotification(t("room.opponent_turn"), 1500);
       return;
     }
 
-    const idx = to1D(pt.x, pt.y, pt.z, N);
+    // 本地 PvP：自动切换玩家 ID
+    const activeId = localBlackId ? (currentPlayer === "Black" ? localBlackId : localWhiteId) : playerId;
 
-    if (localGame) {
-      const player = currentPlayer === "Black" ? 1 : 2;
-      const result = executePlace(board, idx, player, N, historyHashes, moveCount);
+    try {
+      const result = await roomClient.play(roomCode, activeId, pt.x, pt.y, pt.z);
       if (result.legal) {
-        playMoveSound(result.terminal, undefined, result.captured.length > 0, false);
-        historyHashes.add(boardHash(board));
-        moveCount++;
-        if (!result.terminal) {
-          currentPlayer = currentPlayer === "Black" ? "White" : "Black";
-        } else {
-          terminal = true;
-          winner = result.winner;
+        playMoveSound(result.terminal, result.result_code, (result.captured_count ?? 0) > 0, false);
+        await syncRoomState();
+        if (result.terminal) {
           showNotification(t("notif.game_over"), 3000);
+        } else if (localBlackId) {
+          // 本地 PvP：继续（当前玩家已通过 syncRoomState 切换）
+        } else {
+          scheduleRoomPoll();
         }
-        refreshInnerCores();
       } else {
         const msg = result.error === "suicide" ? t("hover.suicide") :
           result.error === "first_move_center" ? t("hover.first_move_center") :
           result.error === "core_vacancy" ? t("hover.core_vacancy_own") : t("hover.illegal");
         showNotification(msg, 2000);
       }
-    } else {
-      // 房间模式：发送到服务器
-      try {
-        const result = await roomClient.play(roomCode, playerId, pt.x, pt.y, pt.z);
-        if (result.legal) {
-          playMoveSound(result.terminal, result.result_code, (result.captured_count ?? 0) > 0, false);
-          await syncRoomState();
-          if (result.terminal) showNotification(t("notif.game_over"), 3000);
-          else scheduleRoomPoll(); // 轮到对手，开始轮询
-        } else {
-          const msg = result.error === "suicide" ? t("hover.suicide") :
-            result.error === "first_move_center" ? t("hover.first_move_center") :
-            result.error === "core_vacancy" ? t("hover.core_vacancy_own") : t("hover.illegal");
-          showNotification(msg, 2000);
-        }
-      } catch (e) {
-        showNotification(`${t("notif.place_failed")}: ${(e as Error).message}`, 5000);
-      }
+    } catch (e) {
+      showNotification(`${t("notif.place_failed")}: ${(e as Error).message}`, 5000);
     }
   }
 
   async function handleMoveStone(pt: { x: number; y: number; z: number }) {
     if (terminal) return;
-    if (!localGame && !isMyTurn()) {
+    if (!localBlackId && !isMyTurn()) {
       showNotification(t("room.opponent_turn"), 1500);
       return;
     }
 
     const src = to3D(moveSourceIdx, N);
-    const targetIdx = to1D(pt.x, pt.y, pt.z, N);
+    const activeId = localBlackId ? (currentPlayer === "Black" ? localBlackId : localWhiteId) : playerId;
 
-    if (localGame) {
-      const player = currentPlayer === "Black" ? 1 : 2;
-      const ownVacancies = new Set<number>();
-      for (const [idx, owner] of vacancyOwners) {
-        if (owner === currentPlayer) ownVacancies.add(idx);
-      }
-      const result = executeMoveStone(board, moveSourceIdx, targetIdx, player, N, historyHashes, ownVacancies);
+    try {
+      const result = await roomClient.moveStone(roomCode, activeId, src.x, src.y, src.z, pt.x, pt.y, pt.z);
       if (result.legal) {
-        playMoveSound(result.terminal, undefined, result.captured.length > 0, true);
-        historyHashes.add(boardHash(board));
-        moveCount++;
+        playMoveSound(result.terminal, result.result_code, (result.captured_count ?? 0) > 0, true);
+        await syncRoomState();
         exitMoveMode();
-        if (!result.terminal) {
-          currentPlayer = currentPlayer === "Black" ? "White" : "Black";
-        } else {
-          terminal = true;
-          winner = result.winner;
+        if (result.terminal) {
           showNotification(t("notif.game_over"), 3000);
+        } else if (!localBlackId) {
+          scheduleRoomPoll();
         }
-        refreshInnerCores();
       } else {
         showNotification(`${t("notif.shift_failed")}: ${result.error || ""}`, 2000);
       }
-    } else {
-      try {
-        const result = await roomClient.moveStone(roomCode, playerId, src.x, src.y, src.z, pt.x, pt.y, pt.z);
-        if (result.legal) {
-          playMoveSound(result.terminal, result.result_code, (result.captured_count ?? 0) > 0, true);
-          await syncRoomState();
-          exitMoveMode();
-          if (result.terminal) showNotification(t("notif.game_over"), 3000);
-          else scheduleRoomPoll();
-        } else {
-          showNotification(`${t("notif.shift_failed")}: ${result.error || ""}`, 2000);
-        }
-      } catch (e) {
-        showNotification(`${t("notif.shift_failed")}: ${(e as Error).message}`, 5000);
-      }
+    } catch (e) {
+      showNotification(`${t("notif.shift_failed")}: ${(e as Error).message}`, 5000);
     }
   }
 
   async function syncRoomState() {
-    if (localGame) return;
     try {
       const gs = await roomClient.getState(roomCode);
       applyGameState(gs);
@@ -643,7 +609,7 @@
   }
 
   async function changeBoardSize(newN: number) {
-    if (localGame || gameStarted) return; // 游戏中不可修改
+    if (gameStarted) return; // 游戏中不可修改
     N = newN; sectionAxis = null;
     checker.reinit(N);
     board = new Uint8Array(N * N * N);
@@ -652,19 +618,17 @@
 
   // ── 射线检测开关 ──
   let raycastEnabled = $derived(
-    !gameStarted || (!terminal && (localGame || isMyTurn()))
+    !gameStarted || (!terminal && (localPvP || isMyTurn()))
   );
 
   // 退出房间
   function handleExitGame() {
-    if (localGame) {
-      // 本地 PvP 退出
-      localGame = false;
+    if (localPvP) {
       roomMode = "none";
       gameStarted = false;
+      localBlackId = "";
+      localWhiteId = "";
       const total = N * N * N;
-      board = new Uint8Array(total);
-      currentPlayer = "Black";
       moveCount = 0;
       terminal = false;
       winner = undefined;
@@ -834,7 +798,7 @@
             {t("sidebar.new_game")}
           </button>
 
-          {#if !localGame}
+          {#if !localPvP}
             <div class="room-status">
               {#if isMyTurn()}
                 <p>{t("room.your_turn")}</p>

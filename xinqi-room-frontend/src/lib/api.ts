@@ -1,13 +1,12 @@
 /**
  * 房间 API 客户端。
  *
- * 连接 XinQiRoomServer (localhost:8090)。
- * 仅包含房间相关接口。
+ * 自动使用当前页面域名，支持 ngrok / localhost / 远程部署。
  */
 
 import type { PlayResponse, MoveStoneResponse, GameState } from "./types";
 
-const BASE = "http://localhost:8090";
+const BASE = window.location.origin;
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
