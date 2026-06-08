@@ -42,11 +42,11 @@ int Train_IsTerminal(void* gs) {
     return !XinQi_HasAnyLegalMove((const GameState*)gs);
 }
 
-// 胜者推断：终局时 current 是败方（Place/Shift 已切为 Opp(winner)）
+// 胜者推断：无合法操作时 current 方获胜（无棋可走 = 对方被彻底封锁）
 int Train_GetWinner(void* gs) {
     GameState* g = (GameState*)gs;
     if (!XinQi_HasAnyLegalMove((const GameState*)gs)) {
-        return (g->current == COLOR_BLACK) ? COLOR_WHITE : COLOR_BLACK;
+        return g->current;  // 无棋可走的一方获胜
     }
     return 0;
 }

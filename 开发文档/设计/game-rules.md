@@ -85,9 +85,13 @@ You legally occupy (via **Place or Shift**) an opponent's **core vacancy** → y
 
 **Shift invasion:** Rare but possible — if one of your inner cores is adjacent to the opponent's core vacancy, you can shift your core into it, consuming your own core but winning the game on the spot.
 
-### Board-full tiebreaker
+### Condition C: No Legal Moves (无合法操作)
 
-The board is finite (N³ cells). Every turn either consumes an empty cell (Place) or creates a new core vacancy (Shift). The board will eventually fill completely. If neither player has won by the time the board is full, the player who made the last move without triggering a win loses.
+If a player has **no legal moves** on their turn (neither Place nor Shift), they win immediately.
+
+This is the most unusual rule in XinQi. Being completely stuck means your position is so dominant that the opponent has fully sealed you in — a paradoxical victory where total immobility signals total control.
+
+Note the distinction from Condition A (Clear Board): Condition A requires zero opponent cores, but the opponent may still have cores that are fully trapped and immobile. Condition C catches this case.
 
 ---
 

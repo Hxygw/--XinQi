@@ -637,6 +637,26 @@
                 <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 {t("sidebar.switch_record")}
               </button>
+
+              <!-- 浏览模式下的剖面选择 -->
+              <div class="section-group" style="margin-top:12px">
+                <div class="section-label">{t("sidebar.section")}</div>
+                <div class="size-buttons">
+                  <button class="size-btn" class:active={sectionAxis === null} onclick={() => handleSectionChange(null, 0)}>{t("sidebar.section_all")}</button>
+                  <button class="size-btn" class:active={sectionAxis === 'x'} onclick={() => handleSectionChange('x', Math.floor((N-1)/2))}>X</button>
+                  <button class="size-btn" class:active={sectionAxis === 'y'} onclick={() => handleSectionChange('y', Math.floor((N-1)/2))}>Y</button>
+                  <button class="size-btn" class:active={sectionAxis === 'z'} onclick={() => handleSectionChange('z', Math.floor((N-1)/2))}>Z</button>
+                </div>
+                {#if sectionAxis}
+                  <div class="section-slider">
+                    <span class="slider-label">{sectionAxis.toUpperCase()}:</span>
+                    <input type="range" min={0} max={N-1} bind:value={sectionPos}
+                      oninput={() => handleSectionChange(sectionAxis, sectionPos)} class="slider" />
+                    <span class="slider-val">{sectionPos}</span>
+                  </div>
+                {/if}
+                <div class="section-hint">{t("sidebar.section_hint")}</div>
+              </div>
             {:else}
               <button class="btn-action primary" onclick={startGame}>
                 <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>

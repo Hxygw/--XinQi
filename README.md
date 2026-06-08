@@ -52,7 +52,8 @@
 
 **胜利条件（满足任一即赢）：**
 1. **内芯侵入** 🏆 — 你占据对手的内芯空位（伤疤），立即获胜（主要胜利路径）
-2. **清台终局** — 你触发吃子后，对手棋盘上不存在任何内芯，立即获胜（兜底）
+2. **清台终局** — 你触发吃子后，对手棋盘上不存在任何内芯，立即获胜
+3. **无棋可走** — 轮到某方时该方无任何合法操作，该方直接获胜
 
 > 完整规则：[中文](开发文档/设计/游戏规则.md) · [English](开发文档/设计/game-rules.md)
 
@@ -190,7 +191,8 @@ The board is an **N×N×N 3D lattice** (default 5×5×5 = 125 cells). Black and 
 
 **Win conditions (first to achieve wins):**
 1. **Core Invasion** 🏆 — Occupy the opponent's core vacancy (scar). Game over. (Primary win path)
-2. **Clear Board** — After triggering a capture, the opponent has zero inner cores remaining. Game over. (Safety net)
+2. **Clear Board** — After triggering a capture, the opponent has zero inner cores remaining. Game over.
+3. **No Legal Moves** — If a player has no legal Place or Shift on their turn, they win immediately.
 
 > Full rules: [中文](开发文档/设计/游戏规则.md) · [English](开发文档/设计/game-rules.md)
 

@@ -42,8 +42,8 @@ xinqi-frontend/dist/
 # Training data (generated at runtime)
 data/
 
-# Runtime records
-records/
+# Runtime records (auto-generated)
+records/xinqi_*.json
 dev.bat
 
 # IDE / tooling

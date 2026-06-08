@@ -717,9 +717,8 @@ int8_t XinQi_Place(GameState* gs, int8_t x, int8_t y, int8_t z) {
         return WIN_CLEAR_BOARD;
     }
 
-    // 3. No legal moves for opponent
+    // 3. No legal moves → current player wins (stuck = their position prevailed)
     if (!XinQi_HasAnyLegalMove(gs)) {
-        gs->current = Opp(color);
         return WIN_NO_LEGAL_MOVE;
     }
 
@@ -856,8 +855,8 @@ int8_t XinQi_Shift(GameState* gs,
         return WIN_CLEAR_BOARD;
     }
 
+    // No legal moves → current player wins
     if (!XinQi_HasAnyLegalMove(gs)) {
-        gs->current = Opp(color);
         return WIN_NO_LEGAL_MOVE;
     }
 
