@@ -1,12 +1,13 @@
 /**
  * 本地游戏引擎 — 纯前端执行落子/挪子/提子/终局判定。
  *
- * 使用 legality.ts 做合法性验证，执行时独立做提子和终局判定。
- * 避免网络延迟，适合本地PvP和教学。
+ * 三截面独立提子：在 X/Y/Z 截面中各算各的气，任一截面无气即提。
+ * 基于 legality.ts 做合法性验证。
  */
 
 import { LegalityChecker } from "./legality";
-import { findAllInnerCores, to1D, to3D } from "./boardUtils";
+import { findAllInnerCores, to1D, to3D, buildNeighbors } from "./boardUtils";
+import type { NeighborTable } from "./boardUtils";
 
 export interface PlaceResult {
   legal: boolean;
@@ -25,65 +26,87 @@ export interface ShiftResult {
   error?: string;
 }
 
-/** 三截面找吃：在 board 上找 opponent 连通块，无气则记入 captured */
-function findAndCapture(
-  board: Uint8Array,
-  placedIdx: number,
-  player: 1 | 2,
-  N: number,
-): number[] {
-  const captured = new Set<number>();
+/**
+ * 三截面独立找吃 + 提子。
+ * 在 X/Y/Z 三个截面中各算各的气，任一截面内对手连通块无气即提。
+ */
+function findAndCapture(board: Uint8Array, playIdx: number, player: 1 | 2, N: number): number[] {
   const opponent = player === 1 ? 2 : 1;
-  const p = to3D(placedIdx, N);
-  const dirs: [number, number, number][] = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+  const captured = new Set<number>();
+  const tbl = buildNeighbors(N);
+
+  // 落子点的三个截面邻居
+  const play3D = to3D(playIdx, N);
+  const sectionCoords: number[][] = [];
+  // X-section: fix x, all y,z
+  const xs: number[] = [];
+  for (let y = 0; y < N; y++) for (let z = 0; z < N; z++) xs.push(to1D(play3D.x, y, z, N));
+  sectionCoords.push(xs);
+  // Y-section: fix y, all x,z
+  const ys: number[] = [];
+  for (let x = 0; x < N; x++) for (let z = 0; z < N; z++) ys.push(to1D(x, play3D.y, z, N));
+  sectionCoords.push(ys);
+  // Z-section: fix z, all x,y
+  const zs: number[] = [];
+  for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) zs.push(to1D(x, y, play3D.z, N));
+  sectionCoords.push(zs);
 
   for (let axis = 0; axis < 3; axis++) {
-    // 收集该截面的对手棋子
-    const section: number[] = [];
+    const section = sectionCoords[axis];
     const visited = new Uint8Array(N * N * N);
-    for (let i = 0; i < N * N * N; i++) {
-      const q = to3D(i, N);
-      const inSection = axis === 0 ? q.x === p.x : axis === 1 ? q.y === p.y : q.z === p.z;
-      if (inSection) section.push(i);
-    }
+
+    // 遍历该截面中所有对手棋子，找到连通块
     for (const ci of section) {
-      if (board[ci] === opponent && !visited[ci]) {
-        const group: number[] = [];
-        const queue = [ci];
-        visited[ci] = 1;
-        while (queue.length > 0) {
-          const cur = queue.shift()!;
-          group.push(cur);
-          const pt = to3D(cur, N);
-          for (const [dx, dy, dz] of dirs) {
-            const nx = pt.x + dx, ny = pt.y + dy, nz = pt.z + dz;
-            if (nx < 0 || nx >= N || ny < 0 || ny >= N || nz < 0 || nz >= N) continue;
-            const ni = to1D(nx, ny, nz, N);
-            if (!visited[ni] && board[ni] === opponent) {
+      if (board[ci] !== opponent || visited[ci]) continue;
+
+      // 截面内 4 方向 BFS（不跨截面）
+      const group: number[] = [];
+      const bfsQueue = [ci];
+      visited[ci] = 1;
+      let bfsHead = 0;
+      while (bfsHead < bfsQueue.length) {
+        const cur = bfsQueue[bfsHead++];
+        group.push(cur);
+        const p = to3D(cur, N);
+        // 根据截面轴取 4 个面内邻居
+        const idx4 = (axis === 0) ? p.y * 4 : (axis === 1) ? p.x * 4 : p.x * 4;
+        const neighbors = tbl.neigh[axis];
+        for (let n = 0; n < 4; n++) {
+          const ni = neighbors[cur * 4 + n];
+          if (ni >= 0 && !visited[ni] && board[ni] === opponent) {
+            // 确保 ni 也在同一截面中
+            const np = to3D(ni, N);
+            const inSection = axis === 0 ? np.x === play3D.x : axis === 1 ? np.y === play3D.y : np.z === play3D.z;
+            if (inSection) {
               visited[ni] = 1;
-              queue.push(ni);
+              bfsQueue.push(ni);
             }
           }
         }
-        // 检查气
-        let hasLib = false;
-        for (const gi of group) {
-          const pt = to3D(gi, N);
-          for (const [dx, dy, dz] of dirs) {
-            const nx = pt.x + dx, ny = pt.y + dy, nz = pt.z + dz;
-            if (nx < 0 || nx >= N || ny < 0 || ny >= N || nz < 0 || nz >= N) continue;
-            const ni = to1D(nx, ny, nz, N);
-            if (board[ni] === 0) { hasLib = true; break; }
+      }
+
+      // 检查该连通块在截面内是否有气
+      let hasLib = false;
+      for (const gi of group) {
+        const p = to3D(gi, N);
+        const idx4 = (axis === 0) ? p.y * 4 : (axis === 1) ? p.x * 4 : p.x * 4;
+        for (let n = 0; n < 4; n++) {
+          const ni = neighbors[gi * 4 + n];
+          if (ni >= 0 && board[ni] === 0) {
+            hasLib = true;
+            break;
           }
-          if (hasLib) break;
         }
-        if (!hasLib) for (const gi of group) captured.add(gi);
+        if (hasLib) break;
+      }
+
+      if (!hasLib) {
+        for (const gi of group) captured.add(gi);
       }
     }
   }
 
   const result = [...captured];
-  // 执行提子
   for (const ci of result) board[ci] = 0;
   return result;
 }
@@ -106,14 +129,11 @@ export function executePlace(
     return { legal: false, captured: [], terminal: false, error: result.reason };
   }
 
-  // 执行落子前先记录该位置是否为对手空位（侵入检测）
   const opponentName = player === 1 ? "White" : "Black";
   const wasOpponentVacancy = vacancyOwners.get(idx) === opponentName;
 
-  // 执行落子
   board[idx] = player;
 
-  // 三截面找吃 + 提子
   const captures = findAndCapture(board, idx, player, checker.N);
 
   // 侵入获胜
@@ -131,7 +151,7 @@ export function executePlace(
     }
   }
 
-  // 无棋可走：当前玩家无合法操作则获胜
+  // 无棋可走
   if (!hasAnyLegalMove(board, player, checker, vacancyOwners)) {
     return { legal: true, captured: captures, terminal: true, winner: player === 1 ? "Black" : "White" };
   }
@@ -160,21 +180,17 @@ export function executeShift(
   const opponentName = player === 1 ? "White" : "Black";
   const wasOpponentVacancy = vacancyOwners.get(targetIdx) === opponentName;
 
-  // 执行挪子
   board[sourceIdx] = 0;
   board[targetIdx] = player;
   const newVacancy = sourceIdx;
   vacancyOwners.set(newVacancy, player === 1 ? "Black" : "White");
 
-  // 三截面找吃 + 提子
   const captures = findAndCapture(board, targetIdx, player, checker.N);
 
-  // 侵入获胜
   if (wasOpponentVacancy) {
     return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White" };
   }
 
-  // 清台
   if (captures.length > 0) {
     const cores = findAllInnerCores(board, checker.N);
     const oppCores = player === 1 ? cores.white : cores.black;
@@ -183,7 +199,6 @@ export function executeShift(
     }
   }
 
-  // 无棋可走
   if (!hasAnyLegalMove(board, player, checker, vacancyOwners)) {
     return { legal: true, captured: captures, newVacancy, terminal: true, winner: player === 1 ? "Black" : "White" };
   }
@@ -205,41 +220,34 @@ function hasAnyLegalMove(
   for (const [idx, owner] of vacancyOwners) {
     if (owner === ownerName) ownVacancies.add(idx);
   }
-  // 检查是否有合法落子
   for (let i = 0; i < total; i++) {
     if (board[i] !== 0) continue;
-    const r = checker.checkMove(board, i, player, undefined, false);
-    if (r.legal) return true;
+    if (checker.checkMove(board, i, player, undefined, false).legal) return true;
   }
-  // 检查是否有合法挪子（从任意内芯出发）
+  // 挪子：从内芯出发到空位
+  const dirs: [number, number, number][] = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
   for (let i = 0; i < total; i++) {
     if (board[i] !== player) continue;
-    if (isInnerCoreFast(board, i, N)) {
-      for (let j = 0; j < total; j++) {
-        if (board[j] !== 0) continue;
-        if (ownVacancies.has(j)) continue;
-        const r = checker.checkMoveStone(board, i, j, player, ownVacancies, undefined);
-        if (r.legal) return true;
-      }
+    // 快速内芯检查
+    let isCore = true;
+    const p = to3D(i, N);
+    for (const [dx, dy, dz] of dirs) {
+      const nx = p.x + dx, ny = p.y + dy, nz = p.z + dz;
+      if (nx < 0 || nx >= N || ny < 0 || ny >= N || nz < 0 || nz >= N) continue;
+      const ni = to1D(nx, ny, nz, N);
+      if (board[ni] !== player) { isCore = false; break; }
+    }
+    if (!isCore) continue;
+    for (let j = 0; j < total; j++) {
+      if (board[j] !== 0) continue;
+      if (ownVacancies.has(j)) continue;
+      if (checker.checkMoveStone(board, i, j, player, ownVacancies, undefined).legal) return true;
     }
   }
   return false;
 }
 
-/** 快速内芯判断 */
-function isInnerCoreFast(board: Uint8Array, idx: number, N: number): boolean {
-  const dirs: [number, number, number][] = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
-  const p = to3D(idx, N);
-  for (const [dx, dy, dz] of dirs) {
-    const nx = p.x + dx, ny = p.y + dy, nz = p.z + dz;
-    if (nx < 0 || nx >= N || ny < 0 || ny >= N || nz < 0 || nz >= N) continue;
-    const ni = to1D(nx, ny, nz, N);
-    if (board[ni] !== player) return false;
-  }
-  return true;
-}
-
-/** 棋盘哈希（用于超级劫检测） */
+/** 棋盘哈希 */
 export function boardHash(board: Uint8Array): number {
   let h = 5381;
   for (let i = 0; i < board.length; i++) {
