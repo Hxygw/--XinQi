@@ -924,11 +924,11 @@
           </div>
         {:else}
           <!-- 未开始：棋盘大小 -->
-          <div class="section-group" style="flex-direction:row;gap:8px;padding-top:0;border:none;align-items:center;justify-content:center;">
-            <span class="section-label" style="text-transform:none;font-size:0.75rem;">{t("sidebar.board_size")}</span>
-            <div class="size-buttons">
+          <div class="section-group" style="padding-top:0;border:none;gap:6px;">
+            <div class="section-label" style="text-align:center;text-transform:none;font-size:0.75rem;">{t("sidebar.board_size")}</div>
+            <div class="size-buttons" style="display:flex;gap:6px;justify-content:center;">
               {#each [3, 4, 5, 6, 7] as s}
-                <button class="size-btn" class:active={N === s} onclick={() => changeBoardSize(s)}>
+                <button class="size-btn" class:active={N === s} onclick={() => changeBoardSize(s)} style="flex:none;width:48px;height:48px;border-radius:8px;">
                   {s}³
                 </button>
               {/each}
@@ -1696,19 +1696,19 @@
   .mobile-bottom-bar { display: none; }
   @media (max-width: 768px) {
     .mobile-bottom-bar {
-      display: flex; flex-direction: column; gap: 8px;
-      padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 20px);
-      background: linear-gradient(180deg, rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.12), transparent 40%),
+      display: flex; flex-direction: column; gap: 6px;
+      height: 150px; padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 12px);
+      background: linear-gradient(180deg, rgba(var(--turn-rgb, var(--turn-rgb-default)), 0.28), transparent 70%),
                   var(--sidebar-bg);
       border-top: 1px solid var(--border-light);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      position: relative; overflow-y: auto;
+      overflow-y: auto;
       flex-shrink: 0;
     }
     .mobile-bottom-bar .section-group {
       display: flex; flex-direction: column;
-      gap: 8px; margin: 0; padding: 0;
+      gap: 6px; margin: 0; padding: 0; border-top: none;
     }
     .mobile-bottom-bar .section-label {
       display: block; font-size: 0.7rem;
