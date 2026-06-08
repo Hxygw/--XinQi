@@ -209,14 +209,7 @@ int main() {
         {"Access-Control-Allow-Headers", "Content-Type"},
     });
 
-    // ── CORS 预检 ──
-    svr.set_pre_routing_handler([](const httplib::Request& req, httplib::Response& res) {
-        if (req.method == "OPTIONS") {
-            res.status = 200;
-            return httplib::Server::HandlerResponse::Handled;
-        }
-        return httplib::Server::HandlerResponse::Unhandled;
-    });
+    // ── CORS 预检由 set_default_headers 处理 ──
 
     // ── POST /api/room/create ──
     svr.Post("/api/room/create", [](const httplib::Request& req, httplib::Response& res) {
@@ -608,12 +601,11 @@ int main() {
     cleaner.detach();
 
     int port = 8090;
-    printf("XinQi Room Server listening on http://0.0.0.0:%d\n", port);
+    printf("XinQi Room Server listening on http://localhost:%d\n", port);
     printf("Share via: ngrok http %d\n", port);
-    fflush(stdout);
 
     try {
-        svr.listen("0.0.0.0", port);
+        svr.listen("127.0.0.1", port);
     } catch (const std::exception& e) {
         printf("FATAL: %s\n", e.what());
         return 1;
