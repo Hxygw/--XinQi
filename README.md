@@ -17,6 +17,19 @@
 </p>
 
 <p align="center">
+  <table align="center">
+    <tr>
+      <td align="center"><b>🖥️ XinQiServer</b></td>
+      <td align="center"><b>🌐 XinQiRoomServer</b></td>
+    </tr>
+    <tr>
+      <td align="center">本地对弈 · AI 对战 · 棋谱回放<br>双击运行，浏览器即玩</td>
+      <td align="center">多人在线 · 4 位房间码 · 好友秒入<br>手机电脑均可 · 局域网或 ngrok</td>
+    </tr>
+  </table>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License">
   <img src="https://img.shields.io/badge/C%2B%2B-20-%2300599C" alt="C++20">
   <img src="https://img.shields.io/badge/Svelte-5-orange" alt="Svelte 5">
@@ -225,6 +238,19 @@ env.step(action_idx)                        # 执行落子
 XinQi (芯棋, "Core Chess") is a **brand-new board game** played on an **N×N×N 3D lattice board**. It is not a Go variant — it's an original ruleset inspired by the concept of "liberties" from Go, evolved into a completely different strategic system with its own attack defense dynamics and win conditions.
 
 **In one sentence: place stones in 3D space, capture by cutting off air in any dimension, and let your inner cores break free.**
+
+<p align="center">
+  <table align="center">
+    <tr>
+      <td align="center"><b>🖥️ XinQiServer</b></td>
+      <td align="center"><b>🌐 XinQiRoomServer</b></td>
+    </tr>
+    <tr>
+      <td align="center">Local PvP · AI play · Record replay<br>Double-click to run, play in browser</td>
+      <td align="center">Online multiplayer · 4-digit room code<br>Desktop & mobile · LAN or ngrok</td>
+    </tr>
+  </table>
+</p>
 
 #### At a Glance
 
