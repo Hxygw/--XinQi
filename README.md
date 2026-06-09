@@ -5,9 +5,15 @@
 <h1 align="center">芯棋 · XinQi</h1>
 
 <p align="center">
-  <strong>3D 立体围棋 — N×N×N 格点棋盘，三截面独立提子，内芯挪子机制</strong>
+  <strong>全新三维棋类 — N×N×N 格点棋盘，三截面独立提子 + 内芯挪子</strong>
   <br>
-  <em>3D Go — N×N×N lattice board, 3-section independent capture, core-shift mechanic</em>
+  <em>一个崭新的棋类宇宙，不是变体，是原创。</em>
+</p>
+
+<p align="center">
+  <code>规则简单 · 深度无穷</code>
+  <br>
+  <em>五分钟学会，一辈子下不完</em>
 </p>
 
 <p align="center">
@@ -15,8 +21,10 @@
   <img src="https://img.shields.io/badge/C%2B%2B-20-%2300599C" alt="C++20">
   <img src="https://img.shields.io/badge/Svelte-5-orange" alt="Svelte 5">
   <img src="https://img.shields.io/badge/Three.js-r174-green" alt="Three.js">
-  <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="Platform">
+  <img src="https://img.shields.io/badge/AI-MCTS-brightgreen" alt="AI">
+  <img src="https://img.shields.io/badge/multiplayer-ready-%2344cc11" alt="Multiplayer">
   <img src="https://img.shields.io/badge/mobile-friendly-%2344cc11" alt="Mobile Friendly">
+  <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="Platform">
 </p>
 
 <br>
@@ -25,27 +33,40 @@
 
 ## 🇨🇳 中文
 
-### 什么是芯棋？
+### 芯棋是什么？
 
-芯棋是一种在 **N×N×N 三维格点棋盘** 上进行的双人零和棋类游戏。它从围棋中汲取灵感，但拥有完全独立的规则体系——**三截面独立提子** 和 **内芯挪子** 机制创造了前所未有的攻防深度。
+芯棋不是围棋的三维变体——它是一套**从零设计的原创棋类规则**，在 **N×N×N 三维立体格点**上展开。灵感源于围棋的"气"的概念，但演化出了完全不同的攻防体系和胜利路径。
 
-- 🎲 **N×N×N 棋盘** (默认 5×5×5，125 个格点)
-- 🧊 **三截面提子** — 在 X/Y/Z 三个二维截面中各算各的气，任一截面无气即被提走
-- ⚡ **内芯挪子** — 被完全包围的"内芯"棋子可被挪到相邻位置，原址留下永久"伤疤"（内芯空位）
-- 🏆 **两种胜利方式** — 清台终局（对手无内芯）或 内芯侵入（占据对手内芯空位）
-- 🌐 **中英双语界面** — 一键切换
-- 🌗 **亮暗双主题**
+**一句话概括：在三维棋盘上，你的棋子可以被包围、被提走，也可以"破壳而出"。**
+
+#### 四大特色
+
+|  |  |  |
+|---|---|---|
+| 🎲 **三维棋盘** | 🤏 **规则两分钟** | 🧠 **AI 就绪** | 🌐 **在线对战** |
+| 默认 5×5×5 立 方格点，N=3~13 可调 | 落子 + 挪子，两种操作，一种执着 | 内置 MCTS + Python 训练管线，社区驱动 | 房间服务器 + 4 位码入局，瓜熟蒂落 |
+| 125 个格点构筑立体战场 | 无长考，上手即战 | 从 Rollout 启发式到 AlphaZero 皆可 | 桌面手机均可，同局域网或 ngrok 分享 |
+
+#### 更多亮点
+
+- 🧊 **三截面提子** — X/Y/Z 截面各自算气，任一截面无气即提，攻防思维迥异于平面棋类
+- ⚡ **内芯挪子** — 被六面合围的"内芯"可以破壳移位，原址变成永久"伤疤"
+- 🏆 **双重胜利** — 内芯侵入（踏入对手伤疤）或清台终局（对手无内芯），两种截然不同的战略路径
+- 🌐 **中英双语** — 一键切换界面语言
+- 🌗 **亮暗主题** — 护眼暗色 + 优雅亮色，随光而变
+
+---
 
 ### 快速规则
 
 棋盘是 **N×N×N 立体格点**（默认 5×5×5 = 125 格）。黑白轮流落子，黑先。
 
-**两种操作（每手选其一）：**
+**每手两种操作（二选一）：**
 
 | 操作 | 说明 |
 |------|------|
-| **落子** | 在空格放己方棋子。不能自杀、不能立即恢复上一步局面、第一步禁止天元 |
-| **挪子** | 将一个**内芯**移到相邻格，原位变成永久"伤疤"（内芯空位）。挪子消耗一手棋 |
+| **落子** 🪨 | 在空格放己方棋子。不能自杀、不能立即恢复上一步局面、第一步禁止天元 |
+| **挪子** 🌀 | 将一个**内芯**移到相邻格，原位变成永久"伤疤"（内芯空位）。挪子消耗一手棋 |
 
 **内芯**：六个方向（±X/±Y/±Z）全部被己方或棋盘壁包围的棋子，是最核心的战略资源。
 
@@ -58,6 +79,8 @@
 
 > 完整规则：[中文](开发文档/设计/游戏规则.md) · [English](开发文档/设计/game-rules.md)
 
+---
+
 ### 截图
 
 | 首页（亮色） | 对局（亮色） | 内芯（亮色） | 剖面（亮色） |
@@ -67,6 +90,8 @@
 | 暗色系 | 英文界面 |
 |----------|----------|
 | ![暗色](开发文档/成品图/芯棋%20XinQi%20暗色系-中文-对局.png) | ![英文](开发文档/成品图/芯棋%20XinQi%20暗色系-英文-对局.png) |
+
+---
 
 ### 快速开始
 
@@ -80,91 +105,89 @@
 
 需要 Visual Studio 2022 (v145) + Node.js 18+。
 
+> ⚠️ MSBuild 可能在系统 PATH 中，也可能在 VS 安装目录下（如 `D:\Program Files\VisualStudio\MSBuild\Current\Bin\MSBuild.exe`）。如果找不到 `MSBuild` 命令，请使用完整路径。
+
 ```bash
 # 1. 编译 C++ 后端
-cd "D:\Program Files\VisualStudio\MSBuild\Current\Bin"
-MSBuild "path\to\XinQiServer\XinQiServer.vcxproj" /p:Configuration=Release /p:Platform=x64
+MSBuild XinQiServer\XinQiServer.vcxproj /p:Configuration=Release /p:Platform=x64
 
 # 2. 构建前端
 cd xinqi-frontend
 npm install
 npm run build
-# 将 dist/ 内容复制到 XinQiServer/dist/
 
 # 3. 运行
 XinQiServer\x64\Release\XinQiServer.exe
 # 浏览器打开 http://localhost:8090
 ```
 
-**方式三：联网对战（房间服务器）**
+**方式三：联网对战**
 
-芯棋附带独立房间服务器，支持多人在线对战。
+芯棋附带独立房间服务器，支持多人在线对战。4 位房间号，好友秒入。
 
 ```bash
-# 编译房间服务器
-cd "D:\Program Files\VisualStudio\MSBuild\Current\Bin"
-MSBuild "path\to\XinQiRoomServer\XinQiRoomServer.vcxproj" /p:Configuration=Release /p:Platform=x64
+# 1. 编译房间服务器
+MSBuild XinQiRoomServer\XinQiRoomServer.vcxproj /p:Configuration=Release /p:Platform=x64
 
-# 构建前端（xinqi-room-frontend 独立前端，含房间功能）
+# 2. 构建房间前端
 cd xinqi-room-frontend
 npm install
 npm run build
-# 将 dist/ 复制到 XinQiRoomServer/x64/Release/dist/
 
-# 运行
+# 3. 运行
 XinQiRoomServer\x64\Release\XinQiRoomServer.exe
 # 浏览器打开 http://localhost:8090
 
-# 通过 ngrok 分享给朋友
+# 4. 分享给朋友（同局域网或 ngrok）
 ngrok http 8090
 ```
 
-> 房主创建房间 → 4 位房间号 → 朋友输入房间号加入 → 准备就绪后开始对弈。支持本地 PvP（无需房间）和在线对战两种模式。
-> 手机浏览器同样支持，同一局域网或通过 ngrok 分享均可直接访问。触屏操作：首次点击预览合法性，再次同一格确认落子。
+> 房主创建房间 → 4 位房间号 → 朋友输入房间号加入 → 准备就绪 → 对弈开始。
+>
+> 📱 **手机浏览器同样支持**：触屏操作首次点击预览合法性，再次同一格确认落子。同局域网或 ngrok 均可直连。
+
+---
 
 ### 项目结构
 
 ```
 XinQi/
-├── XinQiCore/          # 核心引擎 (C++20, 静态库)
-│   ├── XinQiCore.h     # 纯 C 风格 API
-│   └── XinQiCore.cpp   # 棋盘、落子、挪子、提子、内芯判定、Zobrist 哈希
-├── XinQiAI/            # AI 引擎 (纯 MCTS, 静态库)
+├── XinQiCore/              # 核心引擎 (C++20, 静态库)
+│   ├── XinQiCore.h         # 纯 C 风格 API
+│   └── XinQiCore.cpp       # 棋盘、落子、挪子、提子、内芯判定、Zobrist 哈希
+├── XinQiAI/                # AI 引擎 (纯 MCTS, 静态库)
 │   ├── XinQiAI.h
-│   └── XinQiAI.cpp     # UCB1 + 随机仿真
-├── XinQiServer/        # HTTP 服务器 (捆绑引擎+AI+前端)
-│   ├── src/main.cpp
-│   └── dist/           # 预构建的前端文件
-├── XinQiRoomServer/    # 房间服务器 (多人在线对战)
-│   ├── src/main.cpp
-│   └── include/        # httplib, nlohmann/json
-├── XinQiTrain/         # 训练模块 (DLL + Python 绑定)
-│   ├── train_api.h/cpp # C 接口导出
-│   ├── xinqi_env.py    # Python ctypes 封装
-│   ├── selfplay.py     # 自对弈数据生成
-│   └── XinQiTrain.dll  # 预编译 DLL
-├── xinqi-frontend/     # 主前端 (Svelte 5 + Three.js)
+│   └── XinQiAI.cpp         # UCB1 + 随机仿真
+├── XinQiServer/            # HTTP 服务器 (捆绑引擎+AI+前端)
+│   └── src/main.cpp
+├── XinQiRoomServer/        # 房间服务器 (多人在线对战)
+│   └── src/main.cpp
+├── XinQiTrain/             # 训练模块 (DLL + Python 绑定)
+│   ├── train_api.h/cpp     # C 接口导出
+│   ├── xinqi_env.py        # Python ctypes 封装
+│   ├── selfplay.py         # 自对弈 → .npz 训练数据
+│   └── XinQiTrain.dll      # 预编译 DLL (Release, /MT)
+├── xinqi-frontend/         # 主前端 (Svelte 5 + Three.js)
 │   └── src/
-│       ├── App.svelte
-│       ├── components/  # Board3D, GameInfo, Modal
-│       └── lib/         # api, legality, boardUtils, types, i18n, sound
-└── xinqi-room-frontend/ # 房间前端 (Svelte 5 + Three.js，含房间+本地对战)
+└── xinqi-room-frontend/    # 房间前端 (Svelte 5 + Three.js，含房间+本地对战)
     └── src/
-        ├── App.svelte
-        ├── components/  # Board3D, GameInfo, Modal
-        └── lib/         # api, legality, boardUtils, types, i18n, sound, localEngine
 ```
+
+---
 
 ### 技术栈
 
 | 模块 | 技术 |
 |------|------|
 | 核心引擎 | C++20, Zobrist Hashing |
-| AI | 纯 MCTS, UCB1, 随机仿真 |
+| AI | 纯 MCTS (UCB1, 随机仿真) |
 | HTTP 服务器 | C++20, [httplib](https://github.com/yhirose/cpp-httplib) (header-only) |
 | 前端 | Svelte 5 + Three.js + TypeScript + Vite 6 |
 | 训练桥接 | C++ DLL → Python ctypes → NumPy → PyTorch |
 | 分发 | 单 exe + 静态前端文件，零外部依赖 |
+| 联机 | 独立房间服务器，4 位房间码入局 |
+
+---
 
 ### AI 训练（面向贡献者）
 
@@ -174,15 +197,12 @@ XinQi/
 
 > 详细的 API 文档和训练指南见 [`TRAINING.md`](TRAINING.md)。
 
-```
-Python 侧可用功能：
-├── XinQiEnv(board_size)     ← 创建棋盘环境
-├── env.get_board()          ← 获取棋盘数据 (int8 array)
-├── env.get_board_encoded()  ← 3 通道 CNN 编码 (己方/对方/空位)
-├── env.mcts_policy(sims)    ← MCTS 策略分布 (float32)
-├── env.step(action_idx)     ← 执行落子
-├── env.step_shift(src, dir) ← 执行挪子
-└── selfplay.py              ← 自对弈 → .npz 训练数据
+```python
+# Python 侧一句话上手
+from xinqi_env import XinQiEnv
+env = XinQiEnv(board_size=5)
+policy = env.mcts_policy(simulations=800)  # MCTS 策略分布
+env.step(action_idx)                        # 执行落子
 ```
 
 **你可以做的贡献方向：**
@@ -191,10 +211,8 @@ Python 侧可用功能：
 |------|------|--------|
 | ★☆☆ | 改进 MCTS Rollout 启发式 | ~50 行 C++ |
 | ★★☆ | 手工局面评估函数 | ~150 行 C++ |
-| ★★☆ | 小网络 + MCTS (AlphaZero 轻量版) | 3-5 天 |
-| ★★★★ | 完整 AlphaZero | 2-4 周 |
-
-**关键设计：** 当前 MCTS 使用纯随机仿真（可以认为它是"纯笨蛋"）。这意味着生成的训练数据质量有限，只能作为验证训练管线的基线。真正的 AI 需要从改进 Rollout 启发式，或直接替换为网络指导的 MCTS 开始。
+| ★★☆ | 小网络 + MCTS (AlphaZero 轻量版) | 3‑5 天 |
+| ★★★★ | 完整 AlphaZero | 2‑4 周 |
 
 > 训练数据格式为标准 `.npz`，详情见 `XinQiTrain/selfplay.py` 文件头注释。
 
@@ -204,14 +222,25 @@ Python 侧可用功能：
 
 ### What is XinQi?
 
-XinQi (芯棋, "Core Chess") is a two-player zero-sum board game played on an **N×N×N 3D lattice board**. Inspired by Go, it features an entirely independent rule system with **3-section independent capture** and **core-shift mechanics** that create unprecedented strategic depth.
+XinQi (芯棋, "Core Chess") is a **brand-new board game** played on an **N×N×N 3D lattice board**. It is not a Go variant — it's an original ruleset inspired by the concept of "liberties" from Go, evolved into a completely different strategic system with its own attack defense dynamics and win conditions.
 
-- 🎲 **N×N×N board** (default 5×5×5, 125 cells)
-- 🧊 **3-section capture** — liberties are evaluated independently in X/Y/Z 2D slices; a group is captured if any slice has zero liberties
-- ⚡ **Core Shift** — fully surrounded "inner core" stones can be shifted to adjacent positions, leaving permanent "scars" (core vacancies)
-- 🏆 **Two win conditions** — Clear Board (opponent has no cores) or Core Invasion (occupy opponent's core vacancy)
-- 🌐 **Bilingual UI** — Chinese/English toggle
-- 🌗 **Dark/Light themes**
+**In one sentence: place stones in 3D space, capture by cutting off air in any dimension, and let your inner cores break free.**
+
+#### At a Glance
+
+|  |  |  |
+|---|---|---|
+| 🎲 **3D Board** | 🤏 **Two-Minute Rules** | 🧠 **AI-Ready** | 🌐 **Online Multiplayer** |
+| Default 5×5×5 lattice, N=3~13 adjustable | Two actions: Place & Shift. Simple to learn. | Built-in MCTS + Python training pipeline | Room server with 4-digit code, easy PvP |
+| 125 cells in a cube | Deep strategy unfolds naturally | From rollout heuristics to full AlphaZero | Desktop & mobile, LAN or ngrok |
+
+#### Highlights
+
+- 🧊 **3-Section Capture** — Liberties evaluated independently in X/Y/Z slices. A group dies if ANY slice has zero liberties. Unprecedented tactical complexity.
+- ⚡ **Core Shift** — Fully surrounded "inner core" stones break out by shifting to adjacent positions, leaving permanent scars.
+- 🏆 **Dual Win Conditions** — Core Invasion (step into opponent's scar) or Clear Board (opponent has no cores left). Two entirely different strategic paths.
+- 🌐 **Bilingual UI** — Chinese/English toggle.
+- 🌗 **Dark/Light Themes** — Easy on the eyes, day or night.
 
 ### Quick Rules
 
@@ -221,16 +250,16 @@ The board is an **N×N×N 3D lattice** (default 5×5×5 = 125 cells). Black and 
 
 | Action | Description |
 |--------|-------------|
-| **Place** | Put your stone on an empty cell. No suicide, no super-KO, first move cannot be the center |
-| **Shift** | Move an **inner core** to an adjacent cell, leaving a permanent "scar" (core vacancy). Costs one turn |
+| **Place** 🪨 | Put your stone on an empty cell. No suicide, no super-KO, first move cannot be center. |
+| **Shift** 🌀 | Move an **inner core** to an adjacent cell, leaving a permanent scar (core vacancy). Costs one turn. |
 
-**Inner Core**: A stone whose six directions (±X/±Y/±Z) are all occupied by friendly stones or the board boundary. The most critical strategic resource.
+**Inner Core**: A stone with all six directions (±X/±Y/±Z) occupied by friendly stones or the board boundary.
 
-**Capture**: After each Place/Shift, liberties are checked **independently** in the X, Y, and Z 2D sections. If an opponent's connected group has zero liberties in any section, the entire group is removed.
+**Capture**: After each Place/Shift, liberties are checked **independently** in X, Y, and Z sections. If any section has zero liberties for an opponent's connected group, the entire group is removed.
 
 **Win conditions (first to achieve wins):**
-1. **Core Invasion** 🏆 — Occupy the opponent's core vacancy (scar). Game over. (Primary win path)
-2. **Clear Board** — After triggering a capture, the opponent has zero inner cores remaining. Game over.
+1. **Core Invasion** 🏆 — Occupy the opponent's core vacancy (scar). Game over.
+2. **Clear Board** — After triggering a capture, opponent has zero inner cores remaining. Game over.
 3. **No Legal Moves** — If a player has no legal Place or Shift on their turn, they win immediately.
 
 > Full rules: [中文](开发文档/设计/游戏规则.md) · [English](开发文档/设计/game-rules.md)
@@ -251,61 +280,64 @@ The board is an **N×N×N 3D lattice** (default 5×5×5 = 125 cells). Black and 
 
 Download `XinQiServer-v0.1.0.zip` from [Releases](https://github.com/Hxygw/--XinQi/releases), unzip, double-click `XinQiServer.exe`, and open `http://localhost:8090` in your browser.
 
-> Two sample games are included (**clearboard-20**, **invasion-76**). Click **Browse Records** after launching to watch the replays.
+> Two sample games are included (**clearboard-20**, **invasion-76**). Click **Browse Records** after launching to watch replays.
 
 **Option 2: Build from source**
 
 Requires Visual Studio 2022 (v145) + Node.js 18+.
 
+> ⚠️ MSBuild may not be in your system PATH. If you can't find it, use the full path (e.g. `D:\Program Files\VisualStudio\MSBuild\Current\Bin\MSBuild.exe`).
+
 ```bash
 # 1. Build C++ backend
-cd "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
-MSBuild "path\to\XinQiServer\XinQiServer.vcxproj" /p:Configuration=Release /p:Platform=x64
+MSBuild XinQiServer\XinQiServer.vcxproj /p:Configuration=Release /p:Platform=x64
 
 # 2. Build frontend
 cd xinqi-frontend
 npm install
 npm run build
-# Copy dist/ to XinQiServer/dist/
 
 # 3. Run
 XinQiServer\x64\Release\XinQiServer.exe
 # Open http://localhost:8090
-```**Option 3: Multiplayer room server**
+```
 
-XinQi includes a separate room server for online multiplayer matches.
+**Option 3: Online Multiplayer**
+
+XinQi includes a separate room server for online matches. 4-digit room code, invite a friend instantly.
 
 ```bash
-# Build room server
-cd "D:\Program Files\VisualStudio\MSBuild\Current\Bin"
-MSBuild "path\to\XinQiRoomServer\XinQiRoomServer.vcxproj" /p:Configuration=Release /p:Platform=x64
+# 1. Build room server
+MSBuild XinQiRoomServer\XinQiRoomServer.vcxproj /p:Configuration=Release /p:Platform=x64
 
-# Build frontend (xinqi-room-frontend includes room UI)
+# 2. Build room frontend
 cd xinqi-room-frontend
 npm install
 npm run build
-# Copy dist/ to XinQiRoomServer/x64/Release/dist/
 
-# Run
+# 3. Run
 XinQiRoomServer\x64\Release\XinQiRoomServer.exe
 # Open http://localhost:8090
 
-# Share via ngrok
+# 4. Share with friends (LAN or ngrok)
 ngrok http 8090
 ```
 
-> Host creates a room → 4-digit code → friend enters code to join → both ready → game starts. Also supports local PvP (no room needed).
-> Mobile browser friendly — access via LAN or ngrok. Touch controls: first tap previews legality, second tap on the same cell confirms the move.
+> Host creates a room → 4-digit code → friend enters code to join → both ready → game starts.
+>
+> 📱 **Mobile friendly**: First tap previews legality, second tap confirms. Works on LAN or via ngrok.
+
+### Project Structure
 
 ```
 XinQi/
-├── XinQiCore/          # Core engine (C++20, static library)
-├── XinQiAI/            # AI engine (pure MCTS, static library)
-├── XinQiServer/        # HTTP server (bundles engine+AI+frontend)
-├── XinQiRoomServer/    # Room server (multiplayer online matches)
-├── XinQiTrain/         # Training bridge (DLL + Python bindings)
-├── xinqi-frontend/     # Main frontend (Svelte 5 + Three.js)
-└── xinqi-room-frontend/ # Room frontend (Svelte 5 + Three.js, rooms + local PvP)
+├── XinQiCore/              # Core engine (C++20, static library)
+├── XinQiAI/                # AI engine (pure MCTS, static library)
+├── XinQiServer/            # HTTP server (bundles engine+AI+frontend)
+├── XinQiRoomServer/        # Room server (multiplayer online)
+├── XinQiTrain/             # Training bridge (DLL + Python bindings)
+├── xinqi-frontend/         # Main frontend (Svelte 5 + Three.js)
+└── xinqi-room-frontend/    # Room frontend (Svelte 5 + Three.js)
 ```
 
 ### Tech Stack
@@ -313,30 +345,28 @@ XinQi/
 | Module | Technology |
 |--------|-----------|
 | Core Engine | C++20, Zobrist Hashing |
-| AI | Pure MCTS, UCB1, Random Rollout |
+| AI | Pure MCTS (UCB1, Random Rollout) |
 | HTTP Server | C++20, [httplib](https://github.com/yhirose/cpp-httplib) (header-only) |
 | Frontend | Svelte 5 + Three.js + TypeScript + Vite 6 |
 | Training Bridge | C++ DLL → Python ctypes → NumPy → PyTorch |
 | Distribution | Single exe + static frontend files, zero external deps |
+| Multiplayer | Standalone room server, 4-digit room codes |
 
-### AI Training (for Contributors)
+### AI Training
 
 XinQi ships with a complete AI training scaffolding, enabling AlphaZero-style training on a 5×5×5 board.
 
 **Current state: The training pipeline skeleton is ready. The real AI is waiting for the community.**
 
-> Full API docs and training guide: [`TRAINING.md`](TRAINING.md).
+```python
+# One-liner to get started
+from xinqi_env import XinQiEnv
+env = XinQiEnv(board_size=5)
+policy = env.mcts_policy(simulations=800)
+env.step(action_idx)
+```
 
-```
-Python API overview:
-├── XinQiEnv(board_size)         ← Create board environment
-├── env.get_board()              ← Get raw board (int8 array)
-├── env.get_board_encoded()      ← 3-channel CNN encoding
-├── env.mcts_policy(sims)        ← MCTS policy distribution
-├── env.step(action_idx)         ← Execute place
-├── env.step_shift(src, dir)     ← Execute shift
-└── selfplay.py                  ← Self-play → .npz training data
-```
+> Full API docs and training guide: [`TRAINING.md`](TRAINING.md)
 
 **Contribution ideas:**
 
@@ -344,12 +374,8 @@ Python API overview:
 |-----------|-----------|--------|
 | ★☆☆ | Improve MCTS rollout heuristics | ~50 lines C++ |
 | ★★☆ | Handcrafted evaluation function | ~150 lines C++ |
-| ★★☆ | Small network + MCTS (light AlphaZero) | 3-5 days |
-| ★★★★ | Full AlphaZero stack | 2-4 weeks |
-
-**Design note:** The current MCTS uses purely random rollouts, meaning the generated training data is only suitable as a baseline for debugging the training pipeline. A real AI requires either improved rollout heuristics or a network-guided MCTS.
-
-> Training data format is standard `.npz` — see `XinQiTrain/selfplay.py` header comments for details.
+| ★★☆ | Small network + MCTS (light AlphaZero) | 3‑5 days |
+| ★★★★ | Full AlphaZero stack | 2‑4 weeks |
 
 ---
 

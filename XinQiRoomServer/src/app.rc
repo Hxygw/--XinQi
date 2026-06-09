@@ -1,0 +1,5 @@
+// XinQiRoomServer icon resource
+#include <windows.h>
+
+// Main application icon
+IDI_APP ICON "icon.ico"
