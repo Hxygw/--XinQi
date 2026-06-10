@@ -357,6 +357,18 @@ export class LegalityChecker {
     return { suicide: isSuicide, fatalAxes };
   }
 
+  /**
+   * 公开自杀检测 — 用于 executePlace/executeShift 在 findAndCapture 提子后复检。
+   * 因 findAndCapture 与 findCaptures 可能产生不同提子结果，需二次验证。
+   */
+  checkPlaceSuicide(board: Uint8Array, idx: number, player: number): CheckResult {
+    const { suicide, fatalAxes } = this.checkSuicide(board, idx, player);
+    if (suicide) {
+      return { legal: false, reason: "suicide", fatalAxes };
+    }
+    return { legal: true };
+  }
+
   // ── 工具 ────────────────────────────────────────────
 
   private dedupeCaptures(captures: number[]): number[] {

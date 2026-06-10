@@ -91,6 +91,48 @@
   // 超级劫
   let historyHashes = $state(new Set<number>());
 
+  // 悔棋快照
+  interface GameSnapshot {
+    board: Uint8Array;
+    currentPlayer: "Black" | "White";
+    moveCount: number;
+    terminal: boolean;
+    winner?: "Black" | "White" | "Draw";
+    vacancyOwners: Map<number, "Black" | "White">;
+    historyHashes: Set<number>;
+  }
+  let moveHistory = $state<GameSnapshot[]>([]);
+
+  function snapshotState(): GameSnapshot {
+    return {
+      board: new Uint8Array(board),
+      currentPlayer,
+      moveCount,
+      terminal,
+      winner,
+      vacancyOwners: new Map(vacancyOwners),
+      historyHashes: new Set(historyHashes),
+    };
+  }
+
+  function handleUndo() {
+    if (moveHistory.length === 0) return;
+    const snap = moveHistory.pop()!;
+    board = snap.board;
+    currentPlayer = snap.currentPlayer;
+    moveCount = snap.moveCount;
+    terminal = snap.terminal;
+    winner = snap.winner;
+    vacancyOwners = snap.vacancyOwners;
+    historyHashes = snap.historyHashes;
+    moveMode = false;
+    moveSourceIdx = -1;
+    moveBlockIndices = new Set();
+    validTargets = [];
+    refreshInnerCores();
+    showNotification(t("notif.undo_done"));
+  }
+
   // 悬停
   let hoverIdx = $state(-1);
   let hoverLegal = $state(false);
@@ -279,6 +321,7 @@
     vacancyOwners = new Map();
     historyHashes = new Set();
     moveMode = false;
+    moveHistory = [];
     refreshInnerCores();
   }
 
@@ -440,6 +483,7 @@
     if (localPlaying) {
       const player = currentPlayer === "Black" ? 1 : 2;
       const idx = to1D(pt.x, pt.y, pt.z, N);
+      moveHistory = [...moveHistory, snapshotState()];
       const result = executePlace(board, idx, player, checker, historyHashes, moveCount, vacancyOwners);
       if (result.legal) {
         board = result.board;
@@ -502,6 +546,7 @@
     if (localPlaying) {
       const player = currentPlayer === "Black" ? 1 : 2;
       const targetIdx = to1D(pt.x, pt.y, pt.z, N);
+      moveHistory = [...moveHistory, snapshotState()];
       // 构建己方空位集合
       const ownVac = new Set<number>();
       for (const [idx, owner] of vacancyOwners) {
@@ -756,12 +801,14 @@
       localWhiteId = "";
       lastPolledMoveCount = 0;
       const total = N * N * N;
+      board = new Uint8Array(total);
       moveCount = 0;
       terminal = false;
       winner = undefined;
       vacancyOwners = new Map();
       historyHashes = new Set();
       moveMode = false;
+      moveHistory = [];
       refreshInnerCores();
     } else {
       handleLeaveRoom();
@@ -770,6 +817,7 @@
 
   /** 本地引擎重新开始一局 */
   function handleNewLocalGame() {
+    moveHistory = [];
     localPlaying = true;
     roomMode = "playing";
     gameStarted = true;
@@ -1109,6 +1157,16 @@
               <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               {t("sidebar.new_game")}
             </button>
+            {#if localPlaying}
+              <button class="btn-action primary" onclick={handleUndo} disabled={moveHistory.length === 0}>
+                <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h13a4 4 0 0 1 0 8H7"/><polyline points="7 6 3 10 7 14"/></svg>
+                {t("sidebar.undo")}
+              </button>
+              <button class="btn-action primary" onclick={handleNewLocalGame} disabled={moveCount === 0}>
+                <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                {t("sidebar.restart")}
+              </button>
+            {/if}
           {/if}
 
           {#if !localPvP}

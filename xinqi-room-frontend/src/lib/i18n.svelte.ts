@@ -31,6 +31,7 @@ const dict: Translations = {
   "sidebar.current": { zh: "当前", en: "Current" },
   "sidebar.inner_core": { zh: "内芯", en: "Inner Core" },
   "sidebar.new_game": { zh: "退出游戏", en: "Exit Game" },
+  "sidebar.undo": { zh: "悔棋", en: "Undo" },
   "sidebar.restart": { zh: "重新开始", en: "Restart" },
   "sidebar.start_game": { zh: "开始游戏", en: "Start Game" },
   "sidebar.board_size": { zh: "棋盘大小", en: "Board Size" },
@@ -85,6 +86,7 @@ const dict: Translations = {
   "notif.enter_shift_mode": { zh: "挪子模式", en: "Shift mode" },
   "notif.exit_shift_mode": { zh: "退出挪子模式", en: "Exit shift mode" },
   "notif.valid_targets": { zh: "个合法位置", en: "valid target(s)" },
+  "notif.undo_done": { zh: "已悔棋", en: "Undone" },
   "notif.full_view": { zh: "全视图", en: "Full view" },
   "notif.section_view": { zh: "剖面", en: "Section" },
 

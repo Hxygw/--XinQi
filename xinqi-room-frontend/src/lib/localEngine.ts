@@ -145,6 +145,12 @@ export function executePlace(
 
   const captures = findAndCapture(newBoard, idx, player, checker.N);
 
+  // 自杀复检：findAndCapture 可能与 checkMove 内部提子结果不同
+  const suicideCheck = checker.checkPlaceSuicide(newBoard, idx, player);
+  if (!suicideCheck.legal) {
+    return { legal: false, captured: [], terminal: false, error: "suicide", board: new Uint8Array(board) };
+  }
+
   // 侵入获胜
   if (wasOpponentVacancy) {
     vacancyOwners.delete(idx);
@@ -196,6 +202,12 @@ export function executeShift(
   vacancyOwners.set(newVacancy, player === 1 ? "Black" : "White");
 
   const captures = findAndCapture(newBoard, targetIdx, player, checker.N);
+
+  // 自杀复检：findAndCapture 可能与 checkMoveStone 内部提子结果不同
+  const suicideCheck = checker.checkPlaceSuicide(newBoard, targetIdx, player);
+  if (!suicideCheck.legal) {
+    return { legal: false, captured: [], newVacancy: -1, terminal: false, error: "suicide", board: new Uint8Array(board) };
+  }
 
   if (wasOpponentVacancy) {
     return { legal: true, captured: captures, newVacancy, terminal: true, result_code: 2, winner: player === 1 ? "Black" : "White", board: newBoard };
