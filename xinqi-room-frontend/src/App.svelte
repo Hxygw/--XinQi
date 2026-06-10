@@ -975,7 +975,7 @@
           <div class="section-group" style="padding-top:0;border:none;gap:6px;">
             <div class="section-label" style="text-align:center;text-transform:none;font-size:0.75rem;">{t("sidebar.board_size")}</div>
             <div class="size-buttons" style="display:flex;gap:6px;justify-content:center;">
-              {#each [3, 4, 5, 6, 7] as s}
+              {#each [5, 6, 7, 8, 9] as s}
                 <button class="size-btn" class:active={N === s} onclick={() => changeBoardSize(s)} style="flex:none;width:48px;height:48px;border-radius:8px;">
                   {s}³
                 </button>
@@ -1053,7 +1053,7 @@
             <div class="section-group">
               <div class="section-label">{t("sidebar.board_size")}</div>
               <div class="size-buttons">
-                {#each [3, 4, 5, 6, 7] as s}
+                {#each [5, 6, 7, 8, 9] as s}
                   <button class="size-btn" class:active={N === s} onclick={() => changeBoardSize(s)}>
                     {s}³{#if N === s}<svg class="check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{/if}
                   </button>
@@ -1073,7 +1073,7 @@
             <div class="section-group">
               <div class="section-label">{t("sidebar.board_size")}</div>
               <div class="size-buttons">
-                {#each [3, 4, 5, 6, 7] as s}
+                {#each [5, 6, 7, 8, 9] as s}
                   <button class="size-btn" class:active={N === s} onclick={() => { N = s; board = new Uint8Array(s * s * s); checker.reinit(N); historyHashes = new Set(); vacancyOwners = new Map(); moveMode = false; refreshInnerCores(); }}>
                     {s}³{#if N === s}<svg class="check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{/if}
                   </button>
@@ -1096,7 +1096,7 @@
             <div class="section-group">
               <div class="section-label">{t("sidebar.board_size")}</div>
               <div class="size-buttons">
-                {#each [3, 4, 5, 6, 7] as s}
+                {#each [5, 6, 7, 8, 9] as s}
                   <button class="size-btn" class:active={N === s} onclick={() => { N = s; board = new Uint8Array(s * s * s); checker.reinit(N); historyHashes = new Set(); vacancyOwners = new Map(); moveMode = false; refreshInnerCores(); }}>
                     {s}³{#if N === s}<svg class="check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{/if}
                   </button>

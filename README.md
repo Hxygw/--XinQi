@@ -57,7 +57,7 @@
 |  |  |  |
 |---|---|---|
 | 🎲 **三维棋盘** | 🤏 **规则两分钟** | 🧠 **AI 就绪** | 🌐 **在线对战** |
-| 默认 5×5×5 立 方格点，N=3~13 可调 | 落子 + 挪子，两种操作，一种执着 | 内置 MCTS + Python 训练管线，社区驱动 | 房间服务器 + 4 位码入局，瓜熟蒂落 |
+| 默认 5×5×5 立体格点，N=5~9 可选 | 落子 + 挪子，两种操作，一种执着 | 内置 MCTS + Python 训练管线，社区驱动 | 房间服务器 + 4 位码入局，瓜熟蒂落 |
 | 125 个格点构筑立体战场 | 无长考，上手即战 | 从 Rollout 启发式到 AlphaZero 皆可 | 桌面手机均可，同局域网或 ngrok 分享 |
 
 #### 更多亮点
@@ -257,7 +257,7 @@ XinQi (芯棋, "Core Chess") is a **brand-new board game** played on an **N×N×
 |  |  |  |
 |---|---|---|
 | 🎲 **3D Board** | 🤏 **Two-Minute Rules** | 🧠 **AI-Ready** | 🌐 **Online Multiplayer** |
-| Default 5×5×5 lattice, N=3~13 adjustable | Two actions: Place & Shift. Simple to learn. | Built-in MCTS + Python training pipeline | Room server with 4-digit code, easy PvP |
+| Default 5×5×5 lattice, N=5~9 selectable | Two actions: Place & Shift. Simple to learn. | Built-in MCTS + Python training pipeline | Room server with 4-digit code, easy PvP |
 | 125 cells in a cube | Deep strategy unfolds naturally | From rollout heuristics to full AlphaZero | Desktop & mobile, LAN or ngrok |
 
 #### Highlights
