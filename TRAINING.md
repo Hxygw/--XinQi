@@ -8,6 +8,16 @@
 
 ## 中文
 
+### 🧠 为什么在芯棋上训练 AI？
+
+芯棋是一个**在三维格点上展开的原创吃子棋类**。它的规则不属于任何已知游戏的变体——这意味着在它上面训练的每一个模型，都是在探索一个**从未被 AI 征服过的博弈空间**。
+
+三维空间中的 MCTS 遇到了传统二维棋类不会出现的稀疏信号问题；挪子机制引入了多模态动作空间的表征挑战；双重胜利路径迫使价值网络同时评估两种不同的终局条件。每一个环节都有开放的研究问题等着你去回答。
+
+而且，5×5×5 棋盘（125 格，~100 分支因子）用 CPU 就能开始训练。你最需要的是一个好的想法，而不是一块 H100。
+
+**芯棋等待它的第一个 AI。下面的文档帮你上路。**
+
 ### 概述
 
 芯棋内置了一套 C++ → Python 的训练桥接。游戏引擎（`XinQiCore`）和 MCTS 搜索（`XinQiAI`）编译为
@@ -157,6 +167,16 @@ clone = env.clone()  # 深拷贝，用于推演
 ---
 
 ## English
+
+### 🧠 Why Train on XinQi?
+
+XinQi is an **original capture-based board game on a 3D lattice**. It is not a variant of any known game — every model trained on it explores a **game space never conquered by AI before**.
+
+MCTS in 3D faces signal sparsity issues unseen in traditional 2D games. The Shift mechanism introduces multi-modal action space challenges. Dual win conditions force the value network to evaluate two fundamentally different endgame scenarios. Every component is an open research question.
+
+And at 5×5×5 (125 cells, ~100 branching factor), you can start training on CPU. What you need most is a good idea, not an H100.
+
+**XinQi is waiting for its first real AI. The docs below will get you started.**
 
 ### Overview
 

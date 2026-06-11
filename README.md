@@ -202,23 +202,64 @@ XinQi/
 
 ---
 
-### AI 训练（面向贡献者）
+### 🧠 芯棋的 AI，等你来训练
 
-芯棋内置了一套完整的 AI 训练基础设施，让你可以在 5×5×5 棋盘上用 AlphaZero 风格方法训练神经网络。
+芯棋是在 **三维空间** 中展开的原创吃子棋类——棋盘是 5×5×5 立体格点，提子在 X/Y/Z 三个截面独立判断，外加独特的"挪子"破壁机制。这不是围棋、不是五子棋、不是六贯棋——现有 AI 方法在这套规则面前全部是白纸。
 
-**当前状态：训练管线骨架已搭建好，等待社区贡献真正的 AI。**
+**这意味着什么？** 你在这个项目上训练出的模型不会是"又调了一个 AlphaZero 参数"，而是在一个**前所未见**的博弈空间里做真实的探索。复杂度恰到好处（~100 分支因子，CPU 可训），可视化足够漂亮（Three.js 3D 渲染），作为论文选题、毕设项目或个人作品，都有独特的故事可讲。
 
-> 详细的 API 文档和训练指南见 [`TRAINING.md`](TRAINING.md)。
+**三维带来的独特研究问题：**
+
+| 问题 | 为什么有趣 |
+|------|-----------|
+| **3D-MCTS** | 三维空间中随机 Rollout 几乎不可能走出围杀，胜负信号极度稀疏。传统 MCTS 启发式在三维下效果如何？怎样的探索策略最有效？ |
+| **多模态动作空间** | 落子（N³ 维）和挪子（位置×方向）是两种完全不同的操作类型。网络架构如何同时处理？用共享策略头还是分头输出？ |
+| **3D-CNN 表征** | 三维棋盘用 3D 卷积还是分三个截面用 2D 卷积？哪种编码更有利于策略学习？ |
+| **双重胜利路径** | 清台终局和内芯侵入是两种截然不同的胜利方式。模型能否自学两者间的战略取舍？ |
+
+#### 第一步：降低难度——先简化规则再训练
+
+挪子和侵入胜利可能是过度设计。对于训练初期，**强烈建议先关闭它们**，只保留最核心的机制（落子 + 三截面提子 + 清台终局），让 MCTS 信号更密集、网络更容易收敛：
+
+```cpp
+// 在 XinQiCore.cpp 中找到对应函数：
+canShift = false;            // 关闭挪子
+checkInvasionWin = false;    // 关闭侵入胜利
+```
+
+只花两行代码，就把芯棋从一个复杂的全新游戏变成一个在三维棋盘上落子吃子的"简化芯棋"。等模型在简化规则下表现稳定了，再逐步打开完整规则。
+
+#### 第二步：动手训练
 
 ```python
-# Python 侧一句话上手
 from xinqi_env import XinQiEnv
 env = XinQiEnv(board_size=5)
 policy = env.mcts_policy(simulations=800)  # MCTS 策略分布
 env.step(action_idx)                        # 执行落子
 ```
 
-**你可以做的贡献方向：**
+```bash
+python selfplay.py --games 1000 --board 5 --sims 800  # 生成训练数据
+```
+
+> 详细的 API 文档和训练指南见 [`TRAINING.md`](TRAINING.md)。
+
+#### 开放实验——什么样的芯棋最难？
+
+简化规则训好了？那真正的探索才刚刚开始——因为没人知道答案：
+
+- **有挪子 vs 无挪子**：挪子让动作空间更复杂，但会不会反而让模型学到更聪明的策略？
+- **全规则 vs 简化规则**：完整的芯棋（六种胜利/操作路径）真的比简化版更难吗？还是多出来的机制反而给了模型更多决策线索？
+- **棋盘大小**：5×5×5 训好后，模型泛化到 6×6×6 甚至 7×7×7 的效果如何？
+- **什么规则让 AI 最头疼**：哪些机制组合会让 MCTS 搜索效率暴跌？什么样的规则配置能产生最有趣的人类-AI 对局？
+
+这不是"按教程跑一遍"的作业——**芯棋太新了，这些问题没有参考答案。**
+
+#### 你的名字会留在这里
+
+芯棋是开源项目（MIT）。每一个为芯棋 AI 训练做出贡献的人——无论是改进 Rollout 启发式、训练第一个神经网络、还是探索规则变体的实验报告——都会被记录在项目的**贡献者列表**中。
+
+**现在芯棋还没有一个真正的 AI。你，可以是第一个。**
 
 | 难度 | 方向 | 工作量 |
 |------|------|--------|
@@ -226,8 +267,6 @@ env.step(action_idx)                        # 执行落子
 | ★★☆ | 手工局面评估函数 | ~150 行 C++ |
 | ★★☆ | 小网络 + MCTS (AlphaZero 轻量版) | 3‑5 天 |
 | ★★★★ | 完整 AlphaZero | 2‑4 周 |
-
-> 训练数据格式为标准 `.npz`，详情见 `XinQiTrain/selfplay.py` 文件头注释。
 
 ---
 
@@ -390,23 +429,64 @@ XinQi/
 | Distribution | Single exe + static frontend files, zero external deps |
 | Multiplayer | Standalone room server, 4-digit room codes |
 
-### AI Training
+### 🧠 Train XinQi's First AI
 
-XinQi ships with a complete AI training scaffolding, enabling AlphaZero-style training on a 5×5×5 board.
+XinQi unfolds in **3D space** — an N×N×N lattice where capture is judged independently in X/Y/Z sections, with a unique Shift mechanism. This is not Go, not Chess, not Hex. Existing AI approaches encounter a blank slate here.
 
-**Current state: The training pipeline skeleton is ready. The real AI is waiting for the community.**
+**Why this matters:** A model trained on XinQi isn't "yet another AlphaZero reimplementation." It's genuine exploration of an **unseen game space**. The complexity is just right (~100 branching factor, CPU-trainable), the visualization is impressive (Three.js 3D), and it gives you a unique story for a thesis, capstone project, or portfolio piece.
+
+**Unique research challenges in 3D:**
+
+| Question | Why it's interesting |
+|----------|---------------------|
+| **3D-MCTS** | Random rollouts in 3D almost never produce meaningful captures — the signal is extremely sparse. How do traditional MCTS heuristics perform? What exploration strategies work best? |
+| **Multi-modal action space** | Place (N³-dim) and Shift (position×direction) are fundamentally different action types. Shared policy head or separate heads? |
+| **3D-CNN representation** | 3D convolutions vs. three 2D cross-section convs? Which encoding works better for policy learning? |
+| **Dual win conditions** | Clear Board and Core Invasion are entirely different victory paths. Can a model learn the trade-off between them? |
+
+#### Step 1: Simplify the rules first
+
+Shift and Invasion victory might be over-designed. **For initial training, disable them** to make the MCTS signal denser and the network's job easier:
+
+```cpp
+// In XinQiCore.cpp:
+canShift = false;            // disable Shift
+checkInvasionWin = false;    // disable Invasion victory
+```
+
+This transforms XinQi from a complex novel game into a clean "place-and-capture in 3D." Once your model performs well on the simplified rules, gradually re-enable the full ruleset.
+
+#### Step 2: Train
 
 ```python
-# One-liner to get started
 from xinqi_env import XinQiEnv
 env = XinQiEnv(board_size=5)
 policy = env.mcts_policy(simulations=800)
 env.step(action_idx)
 ```
 
+```bash
+python selfplay.py --games 1000 --board 5 --sims 800
+```
+
 > Full API docs and training guide: [`TRAINING.md`](TRAINING.md)
 
-**Contribution ideas:**
+#### Open questions — what makes XinQi hard for AI?
+
+Once the simplified version works, the real exploration begins — because nobody knows the answers:
+
+- **Shift on vs. off**: Does Shift complicate the action space, or does it actually give the model more useful strategic options?
+- **Full rules vs. simplified**: Is the complete XinQi really harder? Or do the extra mechanisms provide more decision signals?
+- **Board scaling**: How well does a model trained on 5×5×5 generalize to 6×6×6 or 7×7×7?
+- **What breaks MCTS?** Which rule combinations cause search efficiency to collapse? What produces the most interesting human-AI games?
+
+This isn't a "run the tutorial" exercise — **XinQi is too new. There are no reference answers.**
+
+#### You'll be remembered
+
+XinQi is open source (MIT). Everyone who contributes to XinQi AI — improving rollout heuristics, training the first neural network, running rule-variant experiments — gets recorded in the project's **contributor roll**.
+
+**XinQi doesn't have a real AI yet. You can be the first.**
 
 | Difficulty | Direction | Effort |
 |-----------|-----------|--------|
