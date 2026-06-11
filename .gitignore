@@ -56,4 +56,7 @@ dev.bat
 # OS
 Thumbs.db
 .DS_Store
-"XinQiServer-v0.1.0.zip"  
+"XinQiServer-v0.1.0.zip"
+
+# Promotional materials (articles, scripts) — not part of the source
+开发文档/宣传素材/  

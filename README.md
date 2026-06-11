@@ -231,6 +231,18 @@ env.step(action_idx)                        # 执行落子
 
 ---
 
+### 一点思考
+
+玩了很久之后，我发现芯棋的规则其实可以更简洁——仅仅保留**清台终局**（吃子后对方无内芯）和**截面杀**就足够支撑起全部的复杂度了。挪子和侵入胜利或许有些过度设计。
+
+但我不打算直接改规则。我把它留给你。
+
+芯棋还很年轻，什么样的规则组合玩起来最舒服——我不知道，也说不准。我鼓励你亲自尝试：可以试试关掉挪子，也可以试试只用清台终局定胜负。也许你会发现一套比现在更优美的规则。
+
+> 如需实验，可自行修改 `XinQiCore.cpp` 中的 `canShift` 或 `checkInvasionWin` 相关逻辑来关闭对应机制。
+
+---
+
 ## 🇬🇧 English
 
 ### What is XinQi?
@@ -402,6 +414,18 @@ env.step(action_idx)
 | ★★☆ | Handcrafted evaluation function | ~150 lines C++ |
 | ★★☆ | Small network + MCTS (light AlphaZero) | 3‑5 days |
 | ★★★★ | Full AlphaZero stack | 2‑4 weeks |
+
+---
+
+### A Thought
+
+After playing extensively, I realized that XinQi's rules can actually be much simpler — just **Clear Board victory** (opponent has no cores after a capture) + **3-section capture** is enough to support the full complexity. The Shift mechanism and Invasion victory might be over-designed.
+
+But I'm not going to change the rules directly. I leave it to you.
+
+XinQi is still young. What combination of rules feels best — I don't know, and I can't say. I encourage you to experiment: try disabling Shift, or try playing with only Clear Board victory. Maybe you'll discover a more elegant ruleset than what I have today.
+
+> To experiment, modify the `canShift` or `checkInvasionWin` related logic in `XinQiCore.cpp` to disable the corresponding mechanics.
 
 ---
 
