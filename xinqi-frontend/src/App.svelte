@@ -265,10 +265,7 @@
     if (!gameStarted) { startGame(); return; }
     const idx = to1D(pt.x, pt.y, pt.z, N);
     if (moveMode) { handleMoveStone(pt); return; }
-    if (innerCoreSet.has(idx) && board[idx] !== 0) {
-      const player = currentPlayer === "Black" ? 1 : 2;
-      if (board[idx] === player) { enterMoveMode(idx); return; }
-    }
+    // 内芯挪子已禁用
     // 对手内芯空位 → 落入空腔（核心入侵）
     if (vacancySet.has(idx) && vacancyOwners.get(idx) !== currentPlayer) { handlePlace(pt); return; }
     if (board[idx] === 0) { handlePlace(pt); return; }
@@ -833,8 +830,8 @@
           <h3>{t("rules.place_title")}</h3>
           <p>{t("rules.place_desc")}</p>
 
-          <h3>{t("rules.shift_title")}</h3>
-          <p>{t("rules.shift_desc")}</p>
+          <h3 style="text-decoration:line-through; opacity:0.6">{t("rules.shift_title")}</h3>
+          <p style="text-decoration:line-through; opacity:0.6">{t("rules.shift_desc")}<br><small>（可能是过度设计，暂移除）</small></p>
 
           <h3>{t("rules.capture_title")}</h3>
           <p>{t("rules.capture_desc")}</p>
@@ -850,7 +847,7 @@
 
           <h3>{t("rules.win_title")}</h3>
           <p>{t("rules.win_clear")}</p>
-          <p>{t("rules.win_invade")}</p>
+          <p style="text-decoration:line-through; opacity:0.6">{t("rules.win_invade")}<br><small>（可能是过度设计，暂移除）</small></p>
           <p>{t("rules.win_stalemate")}</p>
 
           <h3>{t("rules.hotkeys_title")}</h3>
