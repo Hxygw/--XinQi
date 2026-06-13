@@ -136,28 +136,20 @@ XinQiServer\x64\Release\XinQiServer.exe
 
 **方式三：联网对战**
 
-芯棋附带独立房间服务器，支持多人在线对战。4 位房间号，好友秒入。
+芯棋附带独立房间服务器（XinQiRoomServer），支持多人在线对战。4 位房间号，好友秒入。局域网直连或 ngrok 公网穿透均可，手机电脑都支持。
+
+详细步骤（获取、运行、局域网联机、公网穿透、云服务器部署）见：
+
+👉 **[联机对战指南](开发文档/联机对战指南.md)**
 
 ```bash
-# 1. 编译房间服务器
-MSBuild XinQiRoomServer\XinQiRoomServer.vcxproj /p:Configuration=Release /p:Platform=x64
-
-# 2. 构建房间前端
-cd xinqi-room-frontend
-npm install
-npm run build
-
-# 3. 运行
-XinQiRoomServer\x64\Release\XinQiRoomServer.exe
+# 快速启动（需先下载或编译 RoomServer）
+XinQiRoomServer.exe
 # 浏览器打开 http://localhost:8090
-
-# 4. 分享给朋友（同局域网或 ngrok）
-ngrok http 8090
+# 局域网好友访问 http://你本机IP:8090
 ```
 
-> 房主创建房间 → 4 位房间号 → 朋友输入房间号加入 → 准备就绪 → 对弈开始。
->
-> 📱 **手机浏览器同样支持**：触屏操作首次点击预览合法性，再次同一格确认落子。同局域网或 ngrok 均可直连。
+> **一句话流程**：房主启动 RoomServer → 创建房间 → 把 4 位房间号发给好友 → 好友输入房间号加入 → 准备 → 开战。
 
 ---
 
@@ -221,13 +213,22 @@ XinQi/
 
 挪子和侵入胜利可能是过度设计。对于训练初期，**强烈建议先关闭它们**，只保留最核心的机制（落子 + 三截面提子 + 清台终局），让 MCTS 信号更密集、网络更容易收敛：
 
-```cpp
-// 在 XinQiCore.cpp 中找到对应函数：
-canShift = false;            // 关闭挪子
-checkInvasionWin = false;    // 关闭侵入胜利
+```python
+from xinqi_env import XinQiEnv
+
+env = XinQiEnv(board_size=5)
+env.set_allow_shift(False)         # 关闭挪子
+env.set_allow_invasion_win(False)  # 关闭侵入胜利
 ```
 
-只花两行代码，就把芯棋从一个复杂的全新游戏变成一个在三维棋盘上落子吃子的"简化芯棋"。等模型在简化规则下表现稳定了，再逐步打开完整规则。
+一行 Python 代码即可关闭对应机制。等模型在简化规则下表现稳定了，再逐步打开完整规则：
+
+```python
+env.set_allow_shift(True)          # 重新启用挪子
+env.set_allow_invasion_win(True)   # 重新启用侵入胜利
+```
+
+> 💡 **前端暂未提供开关**：核心引擎和训练接口已支持，但网页对战界面还没加上这两个选项。创作者犯懒了。如果你真的需要，提个 Issue 或者喊一声，我就去加上。
 
 #### 第二步：动手训练
 
@@ -381,28 +382,20 @@ XinQiServer\x64\Release\XinQiServer.exe
 
 **Option 3: Online Multiplayer**
 
-XinQi includes a separate room server for online matches. 4-digit room code, invite a friend instantly.
+XinQi includes a separate room server (XinQiRoomServer) for online matches. 4-digit room code, invite a friend instantly. Works over LAN or the public internet via ngrok.
+
+Full guide (getting started, LAN play, ngrok tunneling, cloud server deployment):
+
+👉 **[Online Multiplayer Guide](开发文档/联机对战指南.md)** (Chinese)
 
 ```bash
-# 1. Build room server
-MSBuild XinQiRoomServer\XinQiRoomServer.vcxproj /p:Configuration=Release /p:Platform=x64
-
-# 2. Build room frontend
-cd xinqi-room-frontend
-npm install
-npm run build
-
-# 3. Run
-XinQiRoomServer\x64\Release\XinQiRoomServer.exe
+# Quick start (download or build RoomServer first)
+XinQiRoomServer.exe
 # Open http://localhost:8090
-
-# 4. Share with friends (LAN or ngrok)
-ngrok http 8090
+# LAN friends visit http://your-local-ip:8090
 ```
 
-> Host creates a room → 4-digit code → friend enters code to join → both ready → game starts.
->
-> 📱 **Mobile friendly**: First tap previews legality, second tap confirms. Works on LAN or via ngrok.
+> **One-liner**: Host starts RoomServer → creates a room → shares the 4-digit code → friend enters the code → ready → play.
 
 ### Project Structure
 
@@ -448,13 +441,22 @@ XinQi unfolds in **3D space** — an N×N×N lattice where capture is judged ind
 
 Shift and Invasion victory might be over-designed. **For initial training, disable them** to make the MCTS signal denser and the network's job easier:
 
-```cpp
-// In XinQiCore.cpp:
-canShift = false;            // disable Shift
-checkInvasionWin = false;    // disable Invasion victory
+```python
+from xinqi_env import XinQiEnv
+
+env = XinQiEnv(board_size=5)
+env.set_allow_shift(False)         # disable Shift
+env.set_allow_invasion_win(False)  # disable Invasion victory
 ```
 
-This transforms XinQi from a complex novel game into a clean "place-and-capture in 3D." Once your model performs well on the simplified rules, gradually re-enable the full ruleset.
+A single line of Python toggles each mechanism. Once your model performs well on the simplified rules, gradually re-enable the full ruleset:
+
+```python
+env.set_allow_shift(True)          # re-enable Shift
+env.set_allow_invasion_win(True)   # re-enable Invasion victory
+```
+
+> 💡 **No UI toggle (yet):** The core engine and training API support these flags, but the web game UI doesn't have switches for them yet. The creator got lazy. If you actually need it, open an Issue or give a shout — I'll add it.
 
 #### Step 2: Train
 
