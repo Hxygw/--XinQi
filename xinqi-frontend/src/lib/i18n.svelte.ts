@@ -42,7 +42,7 @@ const dict: Translations = {
   "sidebar.board_size": { zh: "棋盘大小", en: "Board Size" },
   "sidebar.section": { zh: "剖面", en: "Section" },
   "sidebar.section_all": { zh: "全", en: "All" },
-  "sidebar.section_hint": { zh: "~全 · 1/2/3 X/Y/Z · +/- 移层", en: "~All · 1/2/3 X/Y/Z · +/- Layer" },
+  "sidebar.section_hint": { zh: "~全 · 1/2/3 X/Y/Z · Q/E 移层", en: "~All · 1/2/3 X/Y/Z · Q/E Layer" },
   "sidebar.move_mode_hint": { zh: "挪子模式 — 双击目标执行，右键退出", en: "Shift Mode — Double-click target, right-click to exit" },
 
   // 对弈模式
@@ -141,7 +141,7 @@ const dict: Translations = {
   "rules.win_invade": { zh: "② 内芯侵入 — 你合法占据对方的内芯空位（对方挪子留下的空位）→ 你赢。", en: "② Core Invasion — You legally occupy an opponent's core vacancy → You win." },
   "rules.win_stalemate": { zh: "③ 无棋可下 — 轮到你时，你既不能合法落子也不能合法挪子 → 你赢。", en: "③ Stalemate — On your turn, you can neither place nor shift legally → You win." },
   "rules.hotkeys_title": { zh: "快捷键", en: "Hotkeys" },
-  "rules.hotkeys_desc": { zh: "1/2/3 剖面视图 · ~ 全图 · +/- 翻层 · 右键 退出挪子模式", en: "1/2/3 Section views · ~ Full view · +/- Change layer · Right-click Exit shift mode" },
+  "rules.hotkeys_desc": { zh: "1/2/3 剖面视图 · ~ 全图 · Q/E 翻层 · 右键 退出挪子模式", en: "1/2/3 Section views · ~ Full view · Q/E Change layer · Right-click Exit shift mode" },
 
   // 剖面轴名称
   "section.x": { zh: "X 截面", en: "X Section" },

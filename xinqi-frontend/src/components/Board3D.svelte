@@ -896,13 +896,13 @@
     } else if (key === '3') {
       onSectionChange?.('z', Math.floor((N - 1) / 2));
       event.preventDefault();
-    } else if (key === '+' || key === '=') {
+    } else if (key === 'e' || key === 'E') {
       if (sectionAxis) {
         const next = Math.min(sectionPos + 1, N - 1);
         onSectionChange?.(sectionAxis, next);
         event.preventDefault();
       }
-    } else if (key === '-') {
+    } else if (key === 'q' || key === 'Q') {
       if (sectionAxis) {
         const next = Math.max(sectionPos - 1, 0);
         onSectionChange?.(sectionAxis, next);
