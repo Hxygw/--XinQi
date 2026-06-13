@@ -75,6 +75,15 @@ _dll.Train_HasLegalMove.restype = ctypes.c_int
 _dll.Train_MCTS_Policy.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int]
 _dll.Train_MCTS_Policy.restype = ctypes.c_int
 
+_dll.Train_SetAllowShift.argtypes = [ctypes.c_void_p, ctypes.c_int]
+_dll.Train_SetAllowShift.restype = None
+_dll.Train_GetAllowShift.argtypes = [ctypes.c_void_p]
+_dll.Train_GetAllowShift.restype = ctypes.c_int
+_dll.Train_SetAllowInvasionWin.argtypes = [ctypes.c_void_p, ctypes.c_int]
+_dll.Train_SetAllowInvasionWin.restype = None
+_dll.Train_GetAllowInvasionWin.argtypes = [ctypes.c_void_p]
+_dll.Train_GetAllowInvasionWin.restype = ctypes.c_int
+
 
 class XinQiEnv:
     """芯棋训练环境"""
@@ -242,3 +251,22 @@ class XinQiEnv:
         if not env._gs:
             raise RuntimeError("Clone failed")
         return env
+
+    # ── Runtime flags (for simplified training) ──
+
+    def set_allow_shift(self, allow: bool) -> None:
+        """Enable/disable Shift moves. Disabled by default for simplified training."""
+        _dll.Train_SetAllowShift(self._gs, 1 if allow else 0)
+
+    def get_allow_shift(self) -> bool:
+        """Check whether Shift moves are currently enabled."""
+        return bool(_dll.Train_GetAllowShift(self._gs))
+
+    def set_allow_invasion_win(self, allow: bool) -> None:
+        """Enable/disable Core Invasion victory condition.
+        When disabled, placing on opponent's core vacancy is a normal move (no instant win)."""
+        _dll.Train_SetAllowInvasionWin(self._gs, 1 if allow else 0)
+
+    def get_allow_invasion_win(self) -> bool:
+        """Check whether Core Invasion victory is currently enabled."""
+        return bool(_dll.Train_GetAllowInvasionWin(self._gs))

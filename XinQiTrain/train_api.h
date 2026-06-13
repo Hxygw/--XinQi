@@ -75,4 +75,10 @@ TRAIN_API int Train_HasLegalMove(void* gs);  // 1=有, 0=无
 TRAIN_API int Train_MCTS_Policy(void* gs, float* policyOut,
                                 int policyLen, int simulations);
 
+// ── 运行时开关（简化训练用）──
+TRAIN_API void Train_SetAllowShift(void* gs, int allow);
+TRAIN_API int  Train_GetAllowShift(void* gs);
+TRAIN_API void Train_SetAllowInvasionWin(void* gs, int allow);
+TRAIN_API int  Train_GetAllowInvasionWin(void* gs);
+
 }

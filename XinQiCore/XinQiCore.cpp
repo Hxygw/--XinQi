@@ -413,6 +413,8 @@ GameState* XinQi_Create(int8_t size) {
     gs->hash = 0;
     gs->prevHash = 0;
     gs->lastCaptureCount = 0;
+    gs->allowShift = true;
+    gs->allowInvasionWin = true;
 
     int8_t* board = Board(gs);
     memset(board, CELL_EMPTY, total);
@@ -557,6 +559,7 @@ int8_t XinQi_CheckShift(const GameState* gs,
                          int8_t fx, int8_t fy, int8_t fz,
                          int8_t tx, int8_t ty, int8_t tz) {
     if (!gs) return ERR_OCCUPIED;
+    if (!gs->allowShift) return ERR_NOT_CORE;
     if (IsOutOfBounds(gs, fx, fy, fz) || IsOutOfBounds(gs, tx, ty, tz)) return ERR_OCCUPIED;
 
     int8_t color = gs->current;
@@ -706,7 +709,7 @@ int8_t XinQi_Place(GameState* gs, int8_t x, int8_t y, int8_t z) {
 
     // Check win conditions
     // 1. Core invasion (placing on opponent's core vacancy)
-    if (coreInvasion) {
+    if (gs->allowInvasionWin && coreInvasion) {
         gs->current = Opp(color);
         return WIN_CORE_INVASION;
     }
@@ -734,6 +737,7 @@ int8_t XinQi_Shift(GameState* gs,
                     int8_t fx, int8_t fy, int8_t fz,
                     int8_t tx, int8_t ty, int8_t tz) {
     if (!gs) return ERR_OCCUPIED;
+    if (!gs->allowShift) return ERR_NOT_CORE;
     if (IsOutOfBounds(gs, fx, fy, fz) || IsOutOfBounds(gs, tx, ty, tz)) return ERR_OCCUPIED;
 
     int8_t color = gs->current;
@@ -845,7 +849,7 @@ int8_t XinQi_Shift(GameState* gs,
     gs->moveCount++;
 
     // Win conditions
-    if (coreInvasion) {
+    if (gs->allowInvasionWin && coreInvasion) {
         gs->current = Opp(color);
         return WIN_CORE_INVASION;
     }
@@ -916,8 +920,8 @@ bool XinQi_HasAnyLegalMove(const GameState* gs) {
         }
     }
 
-    // Try to find a legal Shift
-    if (hasCore) {
+    // Try to find a legal Shift (only if shift is enabled)
+    if (gs->allowShift && hasCore) {
         for (int32_t i = 0; i < total; ++i) {
             if (board[i] != color) continue;
             int8_t x = (int8_t)(i / (n * n));
@@ -945,4 +949,21 @@ bool XinQi_HasAnyLegalMove(const GameState* gs) {
     }
 
     return false;
+}
+
+// ============================================================
+// Runtime flags
+// ============================================================
+
+void XinQi_SetAllowShift(GameState* gs, bool allow) {
+    if (gs) gs->allowShift = allow;
+}
+bool XinQi_GetAllowShift(const GameState* gs) {
+    return gs ? gs->allowShift : false;
+}
+void XinQi_SetAllowInvasionWin(GameState* gs, bool allow) {
+    if (gs) gs->allowInvasionWin = allow;
+}
+bool XinQi_GetAllowInvasionWin(const GameState* gs) {
+    return gs ? gs->allowInvasionWin : false;
 }

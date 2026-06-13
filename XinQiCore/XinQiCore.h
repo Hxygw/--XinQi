@@ -49,6 +49,8 @@ struct GameState {
     uint64_t hash;         // Zobrist hash of current board
     uint64_t prevHash;     // hash from one move ago (for super-KO)
     int32_t lastCaptureCount; // stones captured by the most recent move (0 if none)
+    bool    allowShift;         // false = disable Shift entirely (for simplified training)
+    bool    allowInvasionWin;   // false = disable Core Invasion victory (for simplified training)
     // board[0 .. N^3-1] follows in memory (int8_t flat array)
 };
 
@@ -79,3 +81,9 @@ int8_t XinQi_Place(GameState* gs, int8_t x, int8_t y, int8_t z);
 int8_t XinQi_Shift(GameState* gs,
                    int8_t fx, int8_t fy, int8_t fz,
                    int8_t tx, int8_t ty, int8_t tz);
+
+// ----- Runtime flags (for simplified training) -----
+void XinQi_SetAllowShift(GameState* gs, bool allow);
+bool XinQi_GetAllowShift(const GameState* gs);
+void XinQi_SetAllowInvasionWin(GameState* gs, bool allow);
+bool XinQi_GetAllowInvasionWin(const GameState* gs);

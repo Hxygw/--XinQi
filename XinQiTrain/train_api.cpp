@@ -299,3 +299,20 @@ int Train_MCTS_Policy(void* gs, float* policyOut, int policyLen, int simulations
     delete[] children;
     return 1;
 }
+
+// ============================================================
+// 运行时开关
+// ============================================================
+
+void Train_SetAllowShift(void* gs, int allow) {
+    XinQi_SetAllowShift((GameState*)gs, allow != 0);
+}
+int Train_GetAllowShift(void* gs) {
+    return XinQi_GetAllowShift((const GameState*)gs) ? 1 : 0;
+}
+void Train_SetAllowInvasionWin(void* gs, int allow) {
+    XinQi_SetAllowInvasionWin((GameState*)gs, allow != 0);
+}
+int Train_GetAllowInvasionWin(void* gs) {
+    return XinQi_GetAllowInvasionWin((const GameState*)gs) ? 1 : 0;
+}

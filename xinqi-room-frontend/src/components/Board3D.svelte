@@ -34,6 +34,8 @@
     validTargets: number[];
     hoverResult?: { idx: number; legal: boolean; fatalAxes?: number[]; isInnerCore?: boolean } | null;
     validTargetHover?: { idx: number; legal: boolean } | null;
+    /** 棋盘上一手落子索引（用于显示外轮廓） */
+    opponentLastMoveIdx?: number;
     browseTick?: number;
     /** 是否启用自动旋转 */
     autoRotate?: boolean;
@@ -63,7 +65,7 @@
     sectionAxis, sectionPos,
     innerCoreSet, vacancyBlack, vacancyWhite,
     moveMode, moveSourceIdx, moveBlockIndices, validTargets,
-    hoverResult = null, validTargetHover = null,
+    hoverResult = null, validTargetHover = null, opponentLastMoveIdx = -1,
     browseTick = 0, autoRotate = false, raycastEnabled = true,
     sceneBg = 0xf5f3ff, gridColor = 0x7c6df0, dotColor = 0x6c5ce7, innerCoreGlowColor = 0x7c6df0,
     stonePrimary = 0x1E293B, stoneSecondary = 0xD97706, vacancyColor = 0xF43F5E, gridOpacity = 0.5,
@@ -99,6 +101,7 @@
   let vacancyGroup = new THREE.Group();
   let moveBlockGroup = new THREE.Group();
   let validTargetGroup = new THREE.Group();
+  let lastMoveGroup = new THREE.Group();
   let sectionPlaneGroup = new THREE.Group();
 
   let gridLineMeta: { axis: string; fixed1: number; fixed2: number; line: THREE.Line; baseOpacity: number }[] = [];
@@ -216,6 +219,14 @@
     renderFrame();
   });
 
+  // 上一手落子外轮廓变化时更新
+  $effect(() => {
+    const _idx = opponentLastMoveIdx;
+    if (!initialized) return;
+    updateLastMove();
+    renderFrame();
+  });
+
   const STONE_RADIUS = 0.29;
   const STONE_SEGMENTS = 20;
 
@@ -265,6 +276,7 @@
     boardContent.add(vacancyGroup);
     boardContent.add(moveBlockGroup);
     boardContent.add(validTargetGroup);
+    boardContent.add(lastMoveGroup);
     boardContent.add(sectionPlaneGroup);
 
     buildGrid();
@@ -694,6 +706,49 @@
       const dot = new THREE.Mesh(dotGeo, dotMat);
       dot.position.set(pt.x, pt.y, pt.z);
       validTargetGroup.add(dot);
+    }
+  }
+
+  // ── 上一手落子外轮廓（金色光环 + 粗环） ─────────
+
+  function updateLastMove() {
+    disposeGroup(lastMoveGroup);
+    if (opponentLastMoveIdx < 0) return;
+
+    const pt = to3D(opponentLastMoveIdx, N);
+    const inSlice = isInSlice(pt.x, pt.y, pt.z);
+    if (sectionAxis && !inSlice) return;
+
+    // 紧贴棋子的外轮廓光晕
+    const glowGeo = new THREE.SphereGeometry(STONE_RADIUS * 1.12, 20, 20);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: 0xFBBF24,
+      transparent: true,
+      opacity: 0.45,
+      depthWrite: false,
+    });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    glow.position.set(pt.x, pt.y, pt.z);
+    lastMoveGroup.add(glow);
+
+    // 剖面模式下加 2D 环
+    if (sectionAxis) {
+      const ring2dGeo = new THREE.RingGeometry(STONE_RADIUS * 0.92, STONE_RADIUS * 1.12, 24);
+      const ring2dMat = new THREE.MeshBasicMaterial({
+        color: 0xFBBF24,
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const ring2d = new THREE.Mesh(ring2dGeo, ring2dMat);
+      ring2d.position.set(pt.x, pt.y, pt.z);
+      switch (sectionAxis) {
+        case 'x': ring2d.rotation.set(0, Math.PI / 2, 0); break;
+        case 'y': ring2d.rotation.set(-Math.PI / 2, 0, 0); break;
+        case 'z': ring2d.rotation.set(0, 0, 0); break;
+      }
+      lastMoveGroup.add(ring2d);
     }
   }
 

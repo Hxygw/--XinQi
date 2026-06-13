@@ -152,6 +152,7 @@ static int gen_place_moves(const GameState* gs, AIMove* out, int maxOut) {
 }
 
 static int gen_shift_moves(const GameState* gs, AIMove* out, int maxOut) {
+    if (!gs->allowShift) return 0;
     int8_t N = gs->size;
     int32_t total = N * N * N;
     const int8_t* board = XinQi_BoardData(gs);
@@ -221,28 +222,30 @@ static bool fast_random_play_step(GameState* gs) {
         // r < 0 → 非法，棋盘不变，继续试
     }
 
-    // Phase 2: 随机尝试挪子
-    int32_t startIdx = rand_range(0, total);
-    for (int t = 0; t < total; ++t) {
-        int32_t idx = (startIdx + t) % total;
-        int8_t x = (int8_t)(idx / (N * N));
-        int8_t y = (int8_t)((idx / N) % N);
-        int8_t z = (int8_t)(idx % N);
-        if (XinQi_GetCell(gs, x, y, z) != color) continue;
-        if (!XinQi_IsCore(gs, x, y, z)) continue;
+    // Phase 2: 随机尝试挪子（仅当挪子启用时）
+    if (gs->allowShift) {
+        int32_t startIdx = rand_range(0, total);
+        for (int t = 0; t < total; ++t) {
+            int32_t idx = (startIdx + t) % total;
+            int8_t x = (int8_t)(idx / (N * N));
+            int8_t y = (int8_t)((idx / N) % N);
+            int8_t z = (int8_t)(idx % N);
+            if (XinQi_GetCell(gs, x, y, z) != color) continue;
+            if (!XinQi_IsCore(gs, x, y, z)) continue;
 
-        int d = rand_range(0, 6);
-        int8_t nx = (int8_t)(x + dx6[d]);
-        int8_t ny = (int8_t)(y + dy6[d]);
-        int8_t nz = (int8_t)(z + dz6[d]);
-        if (XinQi_GetCell(gs, nx, ny, nz) != CELL_EMPTY) continue;
+            int d = rand_range(0, 6);
+            int8_t nx = (int8_t)(x + dx6[d]);
+            int8_t ny = (int8_t)(y + dy6[d]);
+            int8_t nz = (int8_t)(z + dz6[d]);
+            if (XinQi_GetCell(gs, nx, ny, nz) != CELL_EMPTY) continue;
 
-        // 快速预检：核心检查是挪子是否合法
-        // 先用 CheckShift 检查
-        if (XinQi_CheckShift(gs, x, y, z, nx, ny, nz) != RESULT_OK) continue;
+            // 快速预检：核心检查是挪子是否合法
+            // 先用 CheckShift 检查
+            if (XinQi_CheckShift(gs, x, y, z, nx, ny, nz) != RESULT_OK) continue;
 
-        int8_t r = XinQi_Shift(gs, x, y, z, nx, ny, nz);
-        if (r >= 0) return r == RESULT_OK;
+            int8_t r = XinQi_Shift(gs, x, y, z, nx, ny, nz);
+            if (r >= 0) return r == RESULT_OK;
+        }
     }
 
     return false;

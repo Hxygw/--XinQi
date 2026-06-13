@@ -129,6 +129,7 @@
     moveSourceIdx = -1;
     moveBlockIndices = new Set();
     validTargets = [];
+    lastMoveIdx = -1;
     refreshInnerCores();
     showNotification(t("notif.undo_done"));
   }
@@ -146,6 +147,20 @@
   let moveBlockIndices = $state(new Set<number>());
   let validTargets = $state<number[]>([]);
   let validTargetHover = $state<{ idx: number; legal: boolean } | null>(null);
+  /** 棋盘上一手落子位置（用于显示外轮廓） */
+  let lastMoveIdx = $state(-1);
+
+  /** 比较前后棋盘差异，找出最新落子位置 */
+  function updateLastMoveFromDiff(prevBoard: Uint8Array) {
+    const total = N * N * N;
+    for (let i = 0; i < total; i++) {
+      if (board[i] >= 1 && board[i] <= 2 && prevBoard[i] !== board[i]) {
+        lastMoveIdx = i;
+        return;
+      }
+    }
+    lastMoveIdx = -1;
+  }
 
   // 规则面板
   let showRules = $state(false);
@@ -235,6 +250,7 @@
     vacancyOwners = new Map();
     historyHashes = new Set();
     moveMode = false;
+    lastMoveIdx = -1;
     refreshInnerCores();
     showNotification(t("room.pvp_local"));
   }
@@ -322,6 +338,7 @@
     historyHashes = new Set();
     moveMode = false;
     moveHistory = [];
+    lastMoveIdx = -1;
     refreshInnerCores();
   }
 
@@ -427,9 +444,13 @@
       if (gs.move_count > lastPolledMoveCount) {
         playMoveSound(gs.terminal, undefined, false, gs.last_is_shift ?? false);
         lastPolledMoveCount = gs.move_count;
+        // 保存旧棋盘用于 diff，找出对手落子位置
+        const prevBoard = new Uint8Array(board);
+        applyGameState(gs);
+        updateLastMoveFromDiff(prevBoard);
+      } else {
+        applyGameState(gs);
       }
-
-      applyGameState(gs);
 
       if (terminal) {
         showNotification(t("notif.game_over"), 3000);
@@ -491,6 +512,7 @@
         vacancyOwners = new Map(vacancyOwners);
         playMoveSound(result.terminal, result.result_code, result.captured.length > 0, false);
         historyHashes.add(boardHash(board));
+        lastMoveIdx = idx;
         moveCount++;
         if (result.terminal) {
           terminal = true;
@@ -560,6 +582,7 @@
         playMoveSound(result.terminal, result.result_code, result.captured.length > 0, true);
         historyHashes.add(boardHash(board));
         exitMoveMode();
+        lastMoveIdx = targetIdx;
         moveCount++;
         if (result.terminal) {
           terminal = true;
@@ -600,7 +623,9 @@
   async function syncRoomState() {
     try {
       const gs = await roomClient.getState(roomCode);
+      const prevBoard = new Uint8Array(board);
       applyGameState(gs);
+      updateLastMoveFromDiff(prevBoard);
       lastPolledMoveCount = moveCount;
     } catch (e) {
       showNotification(`${t("error.sync_failed")}: ${(e as Error).message}`, 5000);
@@ -783,6 +808,7 @@
     checker.reinit(N);
     historyHashes = new Set();
     board = new Uint8Array(N * N * N);
+    lastMoveIdx = -1;
     refreshInnerCores();
   }
 
@@ -809,6 +835,7 @@
       historyHashes = new Set();
       moveMode = false;
       moveHistory = [];
+      lastMoveIdx = -1;
       refreshInnerCores();
     } else {
       handleLeaveRoom();
@@ -830,6 +857,7 @@
     vacancyOwners = new Map();
     historyHashes = new Set();
     moveMode = false;
+    lastMoveIdx = -1;
     refreshInnerCores();
     showNotification(t("room.pvp_local"));
   }
@@ -856,6 +884,7 @@
         vacancyOwners = new Map();
         historyHashes = new Set();
         moveMode = false;
+        lastMoveIdx = -1;
         refreshInnerCores();
         startPollInfo();
         showNotification(t("room.return_room"));
@@ -879,6 +908,7 @@
       vacancyOwners = new Map();
       historyHashes = new Set();
       moveMode = false;
+      lastMoveIdx = -1;
       refreshInnerCores();
       startPollInfo();
       showNotification(t("room.return_room"));
@@ -940,6 +970,7 @@
           moveBlockIndices={moveBlockIndices} {validTargets}
           hoverResult={boardHoverResult} {validTargetHover}
           browseTick={0}
+          opponentLastMoveIdx={lastMoveIdx}
           onhover={handleHover} onleave={handleLeave}
           oncellclick={handleCellClick} oncellrightclick={handleRightClick}
           onSectionChange={handleSectionChange}
